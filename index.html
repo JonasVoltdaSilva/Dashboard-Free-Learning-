@@ -18,7 +18,6 @@
   <header class="header">
     <div class="brand">
       <div class="brand-icon">
-        <!-- checkmark icon -->
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
@@ -32,7 +31,6 @@
     <div class="drop-zone" id="drop-zone">
 
       <div class="upload-icon-box">
-        <!-- upload arrow icon -->
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
@@ -68,7 +66,6 @@
 
   <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
 </div>
-<!-- END UPLOAD SCREEN -->
 
 
 <!-- ═══════════════════════════════════════════════════ DASHBOARD SCREEN -->
@@ -100,7 +97,6 @@
 
   <main class="dash-main">
 
-    <!-- ── Filter Bar ── -->
     <div class="filter-bar">
       <span class="filter-label">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -123,9 +119,7 @@
       </button>
     </div>
 
-    <!-- ── KPI Grid ── -->
     <div class="kpi-grid">
-
       <div class="kpi-card">
         <div class="kpi-icon kpi-icon--blue">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -138,7 +132,6 @@
           <span class="kpi-value" id="kpi-total">0</span>
         </div>
       </div>
-
       <div class="kpi-card">
         <div class="kpi-icon kpi-icon--purple">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -151,7 +144,6 @@
           <span class="kpi-value" id="kpi-depts">0</span>
         </div>
       </div>
-
       <div class="kpi-card">
         <div class="kpi-icon kpi-icon--pink">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -166,7 +158,6 @@
           <span class="kpi-value" id="kpi-obs">0</span>
         </div>
       </div>
-
       <div class="kpi-card">
         <div class="kpi-icon kpi-icon--teal">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -178,64 +169,42 @@
           <span class="kpi-value" id="kpi-types">0</span>
         </div>
       </div>
-
     </div>
-    <!-- end KPI Grid -->
 
-    <!-- ── Row 1: Dept Bar + Types Donut ── -->
     <div class="chart-row chart-row--2fr3fr">
-
       <div class="chart-card">
         <div class="chart-head">
           <div class="chart-head-left">
             <div class="chart-title">Ocorrências por Departamento</div>
             <div class="chart-subtitle">Distribuição total por área</div>
           </div>
-          <div class="chart-head-right">
-            <span class="badge badge--blue">BARRAS</span>
-          </div>
+          <div class="chart-head-right"><span class="badge badge--blue">BARRAS</span></div>
         </div>
-        <div class="chart-body" id="dept-chart-wrap">
-          <canvas id="dept-chart"></canvas>
-        </div>
+        <div class="chart-body" id="dept-chart-wrap"><canvas id="dept-chart"></canvas></div>
       </div>
-
       <div class="chart-card">
         <div class="chart-head">
           <div class="chart-head-left">
             <div class="chart-title">Tipos de Ocorrência</div>
             <div class="chart-subtitle">Proporção por categoria</div>
           </div>
-          <div class="chart-head-right">
-            <span class="badge badge--purple">PIZZA</span>
-          </div>
+          <div class="chart-head-right"><span class="badge badge--purple">PIZZA</span></div>
         </div>
-        <div class="chart-body" id="types-chart-wrap">
-          <canvas id="types-chart"></canvas>
-        </div>
+        <div class="chart-body" id="types-chart-wrap"><canvas id="types-chart"></canvas></div>
       </div>
-
     </div>
-    <!-- end Row 1 -->
 
-    <!-- ── Row 2: Top Observers + Weekly ── -->
     <div class="chart-row chart-row--3fr2fr">
-
       <div class="chart-card">
         <div class="chart-head">
           <div class="chart-head-left">
             <div class="chart-title">Top Observadores</div>
             <div class="chart-subtitle">Quem mais registrou</div>
           </div>
-          <div class="chart-head-right">
-            <span class="badge badge--pink">RANKING</span>
-          </div>
+          <div class="chart-head-right"><span class="badge badge--pink">RANKING</span></div>
         </div>
-        <div class="chart-body" id="obs-chart-wrap">
-          <canvas id="obs-chart"></canvas>
-        </div>
+        <div class="chart-body" id="obs-chart-wrap"><canvas id="obs-chart"></canvas></div>
       </div>
-
       <div class="chart-card">
         <div class="chart-head">
           <div class="chart-head-left">
@@ -251,39 +220,26 @@
         </div>
         <div class="chart-body" id="weekly-chart-wrap">
           <canvas id="weekly-chart" style="display:none"></canvas>
-          <div class="weekly-empty" id="weekly-empty">
-            Selecione um setor para visualizar os dados semanais
-          </div>
+          <div class="weekly-empty" id="weekly-empty">Selecione um setor para visualizar os dados semanais</div>
         </div>
       </div>
-
     </div>
-    <!-- end Row 2 -->
 
-    <!-- ── Row 3: Stacked Bar ── -->
     <div class="chart-row chart-row--full">
-
       <div class="chart-card">
         <div class="chart-head">
           <div class="chart-head-left">
             <div class="chart-title">Tipo por Departamento</div>
             <div class="chart-subtitle">Análise cruzada de categorias e áreas</div>
           </div>
-          <div class="chart-head-right">
-            <span class="badge badge--orange">BARRAS EMPILHADAS</span>
-          </div>
+          <div class="chart-head-right"><span class="badge badge--orange">BARRAS EMPILHADAS</span></div>
         </div>
-        <div class="chart-body" id="stacked-chart-wrap">
-          <canvas id="stacked-chart"></canvas>
-        </div>
+        <div class="chart-body" id="stacked-chart-wrap"><canvas id="stacked-chart"></canvas></div>
       </div>
-
     </div>
-    <!-- end Row 3 -->
 
   </main>
 </div>
-<!-- END DASHBOARD SCREEN -->
 
 <script src="app.js"></script>
 </body>
