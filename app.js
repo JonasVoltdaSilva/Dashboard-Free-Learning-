@@ -124,15 +124,15 @@ function aggregate(rows) {
 
 // ─── Chart defaults ───────────────────────────────────────────────────────────
 const PALETTE = [
-    '#6366f1','#ec4899','#06b6d4','#10b981','#f59e0b',
-    '#8b5cf6','#f43f5e','#14b8a6','#22c55e','#fb923c',
-    '#3b82f6','#a855f7','#ef4444','#84cc16','#e879f9',
-    '#06d6a0','#ffd166','#38bdf8','#a3e635','#c084fc',
+    '#3b82f6','#6366f1','#8b5cf6','#0ea5e9','#10b981',
+    '#22c55e','#2563eb','#4f46e5','#06b6d4','#14b8a6',
+    '#1d4ed8','#7c3aed','#059669','#0284c7','#16a34a',
+    '#0891b2','#4338ca','#9333ea','#15803d','#0369a1',
 ];
 const gc = i => PALETTE[i % PALETTE.length];
 const GRID_COLOR = 'rgba(255,255,255,0.05)';
 const TOOLTIP_OPTS = {
-    backgroundColor: '#1a1a3e',
+    backgroundColor: '#0d1a36',
     titleColor: '#f8fafc',
     bodyColor: '#94a3b8',
     borderColor: 'rgba(255,255,255,0.1)',
@@ -179,14 +179,14 @@ function buildTypesChart(typeCnt) {
     const sorted = Object.entries(typeCnt).sort((a,b) => b[1]-a[1]);
     const labels = sorted.map(([k]) => k);
     const data   = sorted.map(([,v]) => v);
-    const colors = ['#6366f1','#ec4899','#e879f9','#06b6d4','#10b981','#f59e0b'];
+    const colors = ['#3b82f6','#6366f1','#10b981','#0891b2','#8b5cf6','#22c55e'];
     const total  = data.reduce((a,b) => a+b, 0);
 
     destroyChart('types');
     const ctx = document.getElementById('types-chart').getContext('2d');
     charts.types = new Chart(ctx, {
         type: 'doughnut',
-        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, data.length), borderColor: '#070719', borderWidth: 3, hoverOffset: 10 }] },
+        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, data.length), borderColor: '#060612', borderWidth: 3, hoverOffset: 10 }] },
         options: {
             responsive: true, maintainAspectRatio: false, cutout: '64%',
             plugins: {
@@ -269,10 +269,10 @@ function buildWeeklyChart(weekBySector, sector) {
             labels: weeks,
             datasets: [{
                 label: sector, data,
-                borderColor: '#a78bfa',
-                backgroundColor: 'rgba(124,58,237,0.14)',
-                pointBackgroundColor: '#a78bfa',
-                pointBorderColor: '#070719',
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(37,99,235,0.14)',
+                pointBackgroundColor: '#60a5fa',
+                pointBorderColor: '#060612',
                 pointBorderWidth: 2,
                 pointRadius: 5, pointHoverRadius: 7,
                 fill: true, tension: 0.35,
@@ -299,7 +299,7 @@ function buildStackedChart(typeByDept, typeCnt) {
         }).slice(0, 20);
 
     const types  = Object.keys(typeCnt).sort((a,b) => typeCnt[b] - typeCnt[a]);
-    const colors = ['#6366f1','#ec4899','#e879f9','#06b6d4','#10b981','#f59e0b'];
+    const colors = ['#3b82f6','#6366f1','#10b981','#0891b2','#8b5cf6','#22c55e'];
     const labels = depts.map(d => d.length > 16 ? d.slice(0,16)+'…' : d);
 
     const datasets = types.map((type, i) => ({
