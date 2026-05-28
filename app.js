@@ -124,15 +124,15 @@ function aggregate(rows) {
 
 // ─── Chart defaults ───────────────────────────────────────────────────────────
 const PALETTE = [
-    '#3b82f6','#6366f1','#8b5cf6','#0ea5e9','#10b981',
-    '#22c55e','#2563eb','#4f46e5','#06b6d4','#14b8a6',
-    '#1d4ed8','#7c3aed','#059669','#0284c7','#16a34a',
-    '#0891b2','#4338ca','#9333ea','#15803d','#0369a1',
+    '#60a5fa','#a855f7','#2dd4bf','#4ade80','#818cf8',
+    '#34d399','#93c5fd','#c084fc','#5eead4','#86efac',
+    '#38bdf8','#a78bfa','#6ee7b7','#67e8f9','#d8b4fe',
+    '#4ade80','#60a5fa','#f472b6','#fb923c','#facc15',
 ];
 const gc = i => PALETTE[i % PALETTE.length];
 const GRID_COLOR = 'rgba(255,255,255,0.05)';
 const TOOLTIP_OPTS = {
-    backgroundColor: '#0d1a36',
+    backgroundColor: '#0d0d24',
     titleColor: '#f8fafc',
     bodyColor: '#94a3b8',
     borderColor: 'rgba(255,255,255,0.1)',
@@ -179,7 +179,7 @@ function buildTypesChart(typeCnt) {
     const sorted = Object.entries(typeCnt).sort((a,b) => b[1]-a[1]);
     const labels = sorted.map(([k]) => k);
     const data   = sorted.map(([,v]) => v);
-    const colors = ['#3b82f6','#6366f1','#10b981','#0891b2','#8b5cf6','#22c55e'];
+    const colors = ['#60a5fa','#a855f7','#2dd4bf','#4ade80','#818cf8','#f472b6'];
     const total  = data.reduce((a,b) => a+b, 0);
 
     destroyChart('types');
@@ -299,7 +299,7 @@ function buildStackedChart(typeByDept, typeCnt) {
         }).slice(0, 20);
 
     const types  = Object.keys(typeCnt).sort((a,b) => typeCnt[b] - typeCnt[a]);
-    const colors = ['#3b82f6','#6366f1','#10b981','#0891b2','#8b5cf6','#22c55e'];
+    const colors = ['#60a5fa','#a855f7','#2dd4bf','#4ade80','#818cf8','#f472b6'];
     const labels = depts.map(d => d.length > 16 ? d.slice(0,16)+'…' : d);
 
     const datasets = types.map((type, i) => ({
