@@ -1,10 +1,12 @@
 'use strict';
 
+// ─── State ────────────────────────────────────────────────────────────────────
 let allData = [];
 let cols = { dept: -1, type: -1, obs: -1, date: -1 };
 let charts = {};
 let cachedProcessed = null;
 
+// ─── Column detection ─────────────────────────────────────────────────────────
 const KEYWORDS = {
     dept: ['setor', 'departamento', 'area', 'planta', 'unidade', 'local', 'sector', 'dept', 'location'],
     type: ['tipo', 'categoria', 'ocorrencia', 'ocorrência', 'classif', 'classe', 'type', 'category'],
@@ -29,27 +31,37 @@ function detectCol(headers, keywords) {
     return -1;
 }
 
+// ─── Date parsing ─────────────────────────────────────────────────────────────
 function parseDate(val) {
     if (val == null || val === '') return null;
+
     if (typeof val === 'number' && val > 1000) {
         const base = new Date(1899, 11, 30);
         const d = new Date(base.getTime() + val * 86400000);
         return isNaN(d) ? null : d;
     }
+
     const s = String(val).trim();
+
     let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
     if (m) {
         const y = parseInt(m[3]); const mo = parseInt(m[2]) - 1; const d = parseInt(m[1]);
         return new Date(y < 100 ? 2000 + y : y, mo, d);
     }
+
     m = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
     if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+
     const d = new Date(s);
     return isNaN(d.getTime()) ? null : d;
 }
 
+const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
 function monthLabel(d) { return `${MONTHS_SHORT[d.getMonth()]}/${d.getFullYear()}`; }
+function monthSortKey(d) { return d.getFullYear() * 100 + d.getMonth(); }
 
 function isoWeek(d) {
     const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -59,6 +71,7 @@ function isoWeek(d) {
     return `S${String(w).padStart(2,'0')}/${y}`;
 }
 
+// ─── Aggregate data ───────────────────────────────────────────────────────────
 function aggregate(rows) {
     const deptCnt = {}, typeCnt = {}, obsCnt = {}, typeByDept = {}, weekBySector = {};
     const monthKeys = new Set(), sectorSet = new Set();
@@ -76,6 +89,7 @@ function aggregate(rows) {
 
         if (date) {
             monthKeys.add(monthLabel(date));
+
             if (dept) {
                 const wk = isoWeek(date);
                 if (!weekBySector[dept]) weekBySector[dept] = {};
@@ -105,16 +119,17 @@ function aggregate(rows) {
     };
 }
 
+// ─── Chart defaults ───────────────────────────────────────────────────────────
 const PALETTE = [
-    '#6366f1','#ec4899','#06b6d4','#10b981','#f59e0b',
-    '#8b5cf6','#f43f5e','#14b8a6','#22c55e','#fb923c',
-    '#3b82f6','#a855f7','#ef4444','#84cc16','#e879f9',
-    '#06d6a0','#ffd166','#38bdf8','#a3e635','#c084fc',
+    '#3b82f6','#6366f1','#8b5cf6','#0ea5e9','#10b981',
+    '#22c55e','#2563eb','#4f46e5','#06b6d4','#14b8a6',
+    '#1d4ed8','#7c3aed','#059669','#0284c7','#16a34a',
+    '#0891b2','#4338ca','#9333ea','#15803d','#0369a1',
 ];
 const gc = i => PALETTE[i % PALETTE.length];
 const GRID_COLOR = 'rgba(255,255,255,0.05)';
 const TOOLTIP_OPTS = {
-    backgroundColor: '#1a1a3e',
+    backgroundColor: '#0d1a36',
     titleColor: '#f8fafc',
     bodyColor: '#94a3b8',
     borderColor: 'rgba(255,255,255,0.1)',
@@ -133,11 +148,13 @@ Chart.defaults.font.size = 11;
 
 function destroyChart(key) { if (charts[key]) { charts[key].destroy(); charts[key] = null; } }
 
+// ─── Dept Bar Chart ───────────────────────────────────────────────────────────
 function buildDeptChart(deptCnt) {
     const sorted = Object.entries(deptCnt).sort((a,b) => b[1]-a[1]).slice(0, 16);
     const labels = sorted.map(([k]) => k.length > 16 ? k.slice(0,16)+'…' : k);
     const data   = sorted.map(([,v]) => v);
     const colors = data.map((_,i) => gc(i));
+
     destroyChart('dept');
     const ctx = document.getElementById('dept-chart').getContext('2d');
     charts.dept = new Chart(ctx, {
@@ -154,17 +171,19 @@ function buildDeptChart(deptCnt) {
     });
 }
 
+// ─── Types Donut ──────────────────────────────────────────────────────────────
 function buildTypesChart(typeCnt) {
     const sorted = Object.entries(typeCnt).sort((a,b) => b[1]-a[1]);
     const labels = sorted.map(([k]) => k);
     const data   = sorted.map(([,v]) => v);
-    const colors = ['#6366f1','#ec4899','#e879f9','#06b6d4','#10b981','#f59e0b'];
+    const colors = ['#3b82f6','#6366f1','#10b981','#0891b2','#8b5cf6','#22c55e'];
     const total  = data.reduce((a,b) => a+b, 0);
+
     destroyChart('types');
     const ctx = document.getElementById('types-chart').getContext('2d');
     charts.types = new Chart(ctx, {
         type: 'doughnut',
-        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, data.length), borderColor: '#070719', borderWidth: 3, hoverOffset: 10 }] },
+        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, data.length), borderColor: '#060612', borderWidth: 3, hoverOffset: 10 }] },
         options: {
             responsive: true, maintainAspectRatio: false, cutout: '64%',
             plugins: {
@@ -196,11 +215,13 @@ function buildTypesChart(typeCnt) {
     });
 }
 
+// ─── Top Observers Horizontal Bar ────────────────────────────────────────────
 function buildObsChart(obsCnt) {
     const sorted = Object.entries(obsCnt).sort((a,b) => b[1]-a[1]).slice(0, 10);
     const labels = sorted.map(([k]) => k.length > 22 ? k.slice(0,22)+'…' : k);
     const data   = sorted.map(([,v]) => v);
     const colors = data.map((_,i) => gc(i));
+
     destroyChart('obs');
     const ctx = document.getElementById('obs-chart').getContext('2d');
     charts.obs = new Chart(ctx, {
@@ -218,20 +239,25 @@ function buildObsChart(obsCnt) {
     });
 }
 
+// ─── Weekly Line Chart ────────────────────────────────────────────────────────
 function buildWeeklyChart(weekBySector, sector) {
     const canvas = document.getElementById('weekly-chart');
     const empty  = document.getElementById('weekly-empty');
+
     if (!sector || !weekBySector || !weekBySector[sector]) {
         destroyChart('weekly');
         canvas.style.display = 'none';
         empty.style.display  = 'flex';
         return;
     }
+
     canvas.style.display = 'block';
     empty.style.display  = 'none';
+
     const weekData = weekBySector[sector];
     const weeks = Object.keys(weekData).sort();
     const data  = weeks.map(w => weekData[w]);
+
     destroyChart('weekly');
     const ctx = canvas.getContext('2d');
     charts.weekly = new Chart(ctx, {
@@ -240,10 +266,10 @@ function buildWeeklyChart(weekBySector, sector) {
             labels: weeks,
             datasets: [{
                 label: sector, data,
-                borderColor: '#a78bfa',
-                backgroundColor: 'rgba(124,58,237,0.14)',
-                pointBackgroundColor: '#a78bfa',
-                pointBorderColor: '#070719',
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(37,99,235,0.14)',
+                pointBackgroundColor: '#60a5fa',
+                pointBorderColor: '#060612',
                 pointBorderWidth: 2,
                 pointRadius: 5, pointHoverRadius: 7,
                 fill: true, tension: 0.35,
@@ -260,6 +286,7 @@ function buildWeeklyChart(weekBySector, sector) {
     });
 }
 
+// ─── Stacked Bar Chart ────────────────────────────────────────────────────────
 function buildStackedChart(typeByDept, typeCnt) {
     const depts = Object.keys(typeByDept)
         .sort((a, b) => {
@@ -267,15 +294,18 @@ function buildStackedChart(typeByDept, typeCnt) {
             const sb = Object.values(typeByDept[b]).reduce((x,y) => x+y, 0);
             return sb - sa;
         }).slice(0, 20);
+
     const types  = Object.keys(typeCnt).sort((a,b) => typeCnt[b] - typeCnt[a]);
-    const colors = ['#6366f1','#ec4899','#e879f9','#06b6d4','#10b981','#f59e0b'];
+    const colors = ['#3b82f6','#6366f1','#10b981','#0891b2','#8b5cf6','#22c55e'];
     const labels = depts.map(d => d.length > 16 ? d.slice(0,16)+'…' : d);
+
     const datasets = types.map((type, i) => ({
         label: type.length > 32 ? type.slice(0,32)+'…' : type,
         data: depts.map(d => typeByDept[d]?.[type] || 0),
         backgroundColor: colors[i % colors.length],
         borderRadius: 2,
     }));
+
     destroyChart('stacked');
     const ctx = document.getElementById('stacked-chart').getContext('2d');
     charts.stacked = new Chart(ctx, {
@@ -295,10 +325,12 @@ function buildStackedChart(typeByDept, typeCnt) {
     });
 }
 
+// ─── KPI counter animation ────────────────────────────────────────────────────
 function animateValue(el, target) {
     const duration = 600;
     const start = performance.now();
     const from = parseInt(el.textContent.replace(/\D/g, '')) || 0;
+
     function step(now) {
         const t = Math.min((now - start) / duration, 1);
         const ease = 1 - Math.pow(1 - t, 3);
@@ -308,72 +340,97 @@ function animateValue(el, target) {
     requestAnimationFrame(step);
 }
 
+// ─── Render dashboard ─────────────────────────────────────────────────────────
 function renderDashboard(rows) {
     const d = aggregate(rows);
     cachedProcessed = d;
-    animateValue(document.getElementById('kpi-total'),  d.total);
-    animateValue(document.getElementById('kpi-depts'),  d.totalDepts);
-    animateValue(document.getElementById('kpi-obs'),    d.totalObs);
-    animateValue(document.getElementById('kpi-types'),  d.totalTypes);
+
+    animateValue(document.getElementById('kpi-total'),   d.total);
+    animateValue(document.getElementById('kpi-depts'),   d.totalDepts);
+    animateValue(document.getElementById('kpi-obs'),     d.totalObs);
+    animateValue(document.getElementById('kpi-types'),   d.totalTypes);
+
     buildDeptChart(d.deptCnt);
     buildTypesChart(d.typeCnt);
     buildObsChart(d.obsCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
+
     const weeklySel = document.getElementById('weekly-sector');
     buildWeeklyChart(d.weekBySector, weeklySel.value);
 }
 
+// ─── Init from file ────────────────────────────────────────────────────────────
 function initDashboard(rows, headers) {
     cols.dept = detectCol(headers, KEYWORDS.dept);
     cols.type = detectCol(headers, KEYWORDS.type);
     cols.obs  = detectCol(headers, KEYWORDS.obs);
     cols.date = detectCol(headers, KEYWORDS.date);
+
     allData = rows;
+
     const initial = aggregate(rows);
+
     const fMonth = document.getElementById('filter-month');
     const fSector = document.getElementById('filter-sector');
     const wSector = document.getElementById('weekly-sector');
-    [fMonth, fSector, wSector].forEach(el => { while (el.options.length > 1) el.remove(1); });
+
+    [fMonth, fSector, wSector].forEach(el => {
+        while (el.options.length > 1) el.remove(1);
+    });
+
     initial.months.forEach(m => fMonth.add(new Option(m, m)));
     initial.sectors.forEach(s => {
         fSector.add(new Option(s, s));
         wSector.add(new Option(s, s));
     });
+
     const now = new Date();
     document.getElementById('update-time').textContent =
         'Atualizado: ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
     renderDashboard(rows);
+
     document.getElementById('upload-screen').classList.add('hidden');
     document.getElementById('dashboard-screen').classList.remove('hidden');
 }
 
+// ─── Filters ──────────────────────────────────────────────────────────────────
 function applyFilters() {
     const month  = document.getElementById('filter-month').value;
     const sector = document.getElementById('filter-sector').value;
+
     let filtered = allData;
+
     if (month && cols.date >= 0) {
         filtered = filtered.filter(row => {
             const d = parseDate(row[cols.date]);
             return d && monthLabel(d) === month;
         });
     }
+
     if (sector && cols.dept >= 0) {
         filtered = filtered.filter(row => String(row[cols.dept] ?? '').trim() === sector);
     }
+
     renderDashboard(filtered);
 }
 
+// ─── File parsing ─────────────────────────────────────────────────────────────
 function handleFile(file) {
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = e => {
         try {
             const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: false });
             const ws = wb.Sheets[wb.SheetNames[0]];
             const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
             if (raw.length < 2) { alert('Planilha sem dados suficientes.'); return; }
+
             const headers = raw[0].map(h => String(h));
             const rows    = raw.slice(1).filter(r => r.some(c => c !== '' && c != null));
+
             initDashboard(rows, headers);
         } catch (err) {
             console.error(err);
@@ -383,15 +440,16 @@ function handleFile(file) {
     reader.readAsArrayBuffer(file);
 }
 
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    const fileInput    = document.getElementById('file-input');
-    const dropZone     = document.getElementById('drop-zone');
-    const selectBtn    = document.getElementById('select-btn');
-    const uploadNewBtn = document.getElementById('upload-new-btn');
-    const fMonth       = document.getElementById('filter-month');
-    const fSector      = document.getElementById('filter-sector');
-    const clearBtn     = document.getElementById('clear-btn');
-    const wSector      = document.getElementById('weekly-sector');
+    const fileInput   = document.getElementById('file-input');
+    const dropZone    = document.getElementById('drop-zone');
+    const selectBtn   = document.getElementById('select-btn');
+    const uploadNewBtn= document.getElementById('upload-new-btn');
+    const fMonth      = document.getElementById('filter-month');
+    const fSector     = document.getElementById('filter-sector');
+    const clearBtn    = document.getElementById('clear-btn');
+    const wSector     = document.getElementById('weekly-sector');
 
     selectBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
     dropZone.addEventListener('click', () => fileInput.click());
