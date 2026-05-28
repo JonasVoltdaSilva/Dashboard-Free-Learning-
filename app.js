@@ -188,7 +188,7 @@ function buildTypesChart(typeCnt) {
     const sorted = Object.entries(typeCnt).sort((a,b) => b[1]-a[1]);
     const labels = sorted.map(([k]) => k);
     const data   = sorted.map(([,v]) => v);
-    const colors = ['#60a5fa','#a855f7','#2dd4bf','#4ade80','#818cf8','#f472b6'];
+    const colors = ['#60a5fa','#a855f7','#2dd4bf','#4ade80','#818cf8','#f472b6','#fb923c','#facc15','#34d399','#67e8f9'];
     const total  = data.reduce((a,b) => a+b, 0);
 
     destroyChart('types');
@@ -202,15 +202,23 @@ function buildTypesChart(typeCnt) {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        color: '#94a3b8', padding: 14, font: { size: 10 }, boxWidth: 10, boxHeight: 10,
+                        color: '#e2e8f0',
+                        padding: 16,
+                        font: { size: 11, weight: '500' },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 8,
+                        boxHeight: 8,
                         generateLabels: chart => chart.data.labels.map((label, i) => {
                             const val = chart.data.datasets[0].data[i];
                             const pct = total > 0 ? Math.round(val / total * 100) : 0;
-                            const short = label.length > 28 ? label.slice(0,28)+'…' : label;
+                            const short = label.length > 22 ? label.slice(0,22)+'…' : label;
                             return {
-                                text: `${short} (${pct}%)`,
+                                text: `${short}  ${pct}%`,
                                 fillStyle: chart.data.datasets[0].backgroundColor[i],
-                                strokeStyle: 'transparent', lineWidth: 0, hidden: false, index: i,
+                                strokeStyle: chart.data.datasets[0].backgroundColor[i],
+                                pointStyle: 'circle',
+                                lineWidth: 0, hidden: false, index: i,
                             };
                         }),
                     },
