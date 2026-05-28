@@ -127,6 +127,15 @@ const PALETTE = [
     '#4ade80','#60a5fa','#f472b6','#fb923c','#facc15',
 ];
 const gc = i => PALETTE[i % PALETTE.length];
+
+// Rainbow palette for dept chart (arco-íris)
+const RAINBOW = [
+    '#ef4444','#f97316','#eab308','#22c55e','#3b82f6',
+    '#6366f1','#a855f7','#ec4899','#06b6d4','#84cc16',
+    '#f59e0b','#10b981','#8b5cf6','#14b8a6','#f43f5e',
+    '#0ea5e9',
+];
+const gcRainbow = i => RAINBOW[i % RAINBOW.length];
 const GRID_COLOR = 'rgba(255,255,255,0.05)';
 const TOOLTIP_OPTS = {
     backgroundColor: '#0d0d24',
@@ -153,7 +162,7 @@ function buildDeptChart(deptCnt) {
     const sorted = Object.entries(deptCnt).sort((a,b) => b[1]-a[1]).slice(0, 16);
     const labels = sorted.map(([k]) => k.length > 16 ? k.slice(0,16)+'…' : k);
     const data   = sorted.map(([,v]) => v);
-    const colors = data.map((_,i) => gc(i));
+    const colors = data.map((_,i) => gcRainbow(i));
 
     destroyChart('dept');
     const ctx = document.getElementById('dept-chart').getContext('2d');
@@ -183,7 +192,7 @@ function buildTypesChart(typeCnt) {
     const ctx = document.getElementById('types-chart').getContext('2d');
     charts.types = new Chart(ctx, {
         type: 'doughnut',
-        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, data.length), borderColor: '#0b0b18', borderWidth: 3, hoverOffset: 10 }] },
+        data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, data.length), borderColor: 'rgba(255,255,255,0.2)', borderWidth: 2, hoverOffset: 10 }] },
         options: {
             responsive: true, maintainAspectRatio: false, cutout: '64%',
             plugins: {
@@ -266,10 +275,10 @@ function buildWeeklyChart(weekBySector, sector) {
             labels: weeks,
             datasets: [{
                 label: sector, data,
-                borderColor: '#60a5fa',
-                backgroundColor: 'rgba(96,165,250,0.12)',
-                pointBackgroundColor: '#93c5fd',
-                pointBorderColor: '#0b0b18',
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(37,99,235,0.14)',
+                pointBackgroundColor: '#60a5fa',
+                pointBorderColor: '#060612',
                 pointBorderWidth: 2,
                 pointRadius: 5, pointHoverRadius: 7,
                 fill: true, tension: 0.35,

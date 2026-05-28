@@ -322,10 +322,11 @@ html, body {
 #dashboard-screen {
     min-height: 100vh;
     background:
-        radial-gradient(ellipse 800px 600px at 5% 55%, rgba(109,40,217,0.13) 0%, transparent 65%),
-        radial-gradient(ellipse 700px 500px at 95% 65%, rgba(4,120,87,0.11) 0%, transparent 65%),
-        radial-gradient(ellipse 600px 400px at 50% 5%,  rgba(37,99,235,0.10) 0%, transparent 65%),
-        #0b0b18;
+        radial-gradient(ellipse 900px 700px at 8% 60%,  rgba(37,99,235,0.14) 0%, transparent 65%),
+        radial-gradient(ellipse 700px 600px at 92% 40%,  rgba(29,78,216,0.12) 0%, transparent 65%),
+        radial-gradient(ellipse 600px 400px at 50% 5%,  rgba(96,165,250,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 500px 400px at 75% 95%, rgba(59,130,246,0.07) 0%, transparent 60%),
+        #090915;
     position: relative;
 }
 
@@ -525,22 +526,22 @@ html, body {
     pointer-events: none;
 }
 
-/* ── KPI gradient variants — vibrant ── */
+/* ── KPI gradient variants — all blue ── */
 .kpi-card--blue {
     background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #60a5fa 100%);
-    box-shadow: 0 8px 32px rgba(37,99,235,0.5), 0 0 0 1px rgba(96,165,250,0.2);
+    box-shadow: 0 8px 32px rgba(37,99,235,0.55), 0 0 0 1px rgba(96,165,250,0.25);
 }
 .kpi-card--indigo {
-    background: linear-gradient(135deg, #3b0764 0%, #6d28d9 55%, #a855f7 100%);
-    box-shadow: 0 8px 32px rgba(109,40,217,0.5), 0 0 0 1px rgba(168,85,247,0.2);
+    background: linear-gradient(135deg, #172554 0%, #1d4ed8 55%, #93c5fd 100%);
+    box-shadow: 0 8px 32px rgba(29,78,216,0.55), 0 0 0 1px rgba(147,197,253,0.25);
 }
 .kpi-card--teal {
-    background: linear-gradient(135deg, #042f2e 0%, #0f766e 55%, #2dd4bf 100%);
-    box-shadow: 0 8px 32px rgba(15,118,110,0.5), 0 0 0 1px rgba(45,212,191,0.2);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 55%, #bfdbfe 100%);
+    box-shadow: 0 8px 32px rgba(30,64,175,0.55), 0 0 0 1px rgba(191,219,254,0.25);
 }
 .kpi-card--green {
-    background: linear-gradient(135deg, #052e16 0%, #166534 55%, #4ade80 100%);
-    box-shadow: 0 8px 32px rgba(22,101,52,0.5), 0 0 0 1px rgba(74,222,128,0.2);
+    background: linear-gradient(135deg, #0c1a4a 0%, #2563eb 50%, #7dd3fc 100%);
+    box-shadow: 0 8px 32px rgba(37,99,235,0.55), 0 0 0 1px rgba(125,211,252,0.25);
 }
 
 /* ── KPI decorative glow orb ── */
@@ -556,9 +557,9 @@ html, body {
     opacity: 0.65;
 }
 .kpi-card--blue   .kpi-glow { background: rgba(147,197,253,0.7); }
-.kpi-card--indigo .kpi-glow { background: rgba(196,181,253,0.7); }
-.kpi-card--teal   .kpi-glow { background: rgba(94,234,212,0.7); }
-.kpi-card--green  .kpi-glow { background: rgba(134,239,172,0.7); }
+.kpi-card--indigo .kpi-glow { background: rgba(147,197,253,0.7); }
+.kpi-card--teal   .kpi-glow { background: rgba(191,219,254,0.65); }
+.kpi-card--green  .kpi-glow { background: rgba(125,211,252,0.65); }
 
 .kpi-card-top {
     display: flex;
