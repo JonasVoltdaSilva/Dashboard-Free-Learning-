@@ -607,13 +607,11 @@ html, body {
     margin-bottom: 1.25rem;
 }
 
-.chart-row--2fr3fr { grid-template-columns: 2fr 3fr; }
-.chart-row--3fr2fr { grid-template-columns: 3fr 2fr; }
-.chart-row--full   { grid-template-columns: 1fr; }
+.chart-row--full      { grid-template-columns: 1fr; }
+.chart-row--donut-obs { grid-template-columns: 5fr 7fr; }
 
 @media (max-width: 1100px) {
-    .chart-row--2fr3fr,
-    .chart-row--3fr2fr { grid-template-columns: 1fr; }
+    .chart-row--donut-obs { grid-template-columns: 1fr; }
 }
 
 /* ─── CHART CARD — strong glassmorphism ─── */
@@ -712,11 +710,23 @@ html, body {
 .chart-body canvas { display: block; }
 
 /* Fixed heights */
-#dept-chart-wrap    { height: 280px; }
-#types-chart-wrap   { height: 300px; }
-#obs-chart-wrap     { height: 310px; }
-#weekly-chart-wrap  { height: 310px; min-height: 310px; }
-#stacked-chart-wrap { height: 360px; }
+#dept-chart-wrap    { height: 400px; }
+#types-chart-wrap   { height: 380px; }
+#stacked-chart-wrap { height: 420px; }
+#weekly-chart-wrap  { height: 320px; min-height: 320px; }
+
+/* Obs scrollable */
+.obs-scroll-wrap {
+    height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99,102,241,0.35) transparent;
+}
+.obs-scroll-wrap::-webkit-scrollbar { width: 4px; }
+.obs-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+.obs-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 4px; }
+#obs-chart-wrap canvas { display: block; width: 100% !important; }
 
 /* Weekly empty state */
 .weekly-empty {
@@ -733,14 +743,14 @@ html, body {
     padding: 1rem;
 }
 
-/* Weekly sector select */
-.weekly-select {
+/* Chart filter selects (obs + weekly) */
+.chart-filter-select {
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
     color: #f8fafc;
     padding: 0.38rem 1.6rem 0.38rem 0.7rem;
     border-radius: 8px;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-family: var(--font);
     cursor: pointer;
     appearance: none;
@@ -748,10 +758,11 @@ html, body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.45rem center;
-    min-width: 148px;
+    min-width: 120px;
+    max-width: 160px;
     outline: none;
     transition: border-color 0.15s;
     backdrop-filter: blur(8px);
 }
-.weekly-select:focus { border-color: rgba(99,102,241,0.5); }
-.weekly-select option { background: #0d0d28; color: #f8fafc; }
+.chart-filter-select:focus { border-color: rgba(99,102,241,0.5); }
+.chart-filter-select option { background: #0d0d28; color: #f8fafc; }

@@ -211,8 +211,8 @@
 
       </div>
 
-      <!-- Row 1: Dept Bar + Types Donut -->
-      <div class="chart-row chart-row--2fr3fr">
+      <!-- Row 1: Dept Bar (full width, largo) -->
+      <div class="chart-row chart-row--full">
         <div class="chart-card">
           <div class="chart-head">
             <div class="chart-head-left">
@@ -223,7 +223,10 @@
           </div>
           <div class="chart-body" id="dept-chart-wrap"><canvas id="dept-chart"></canvas></div>
         </div>
+      </div>
 
+      <!-- Row 2: Donut (menor) + Top Observadores (maior, com scroll e filtros) -->
+      <div class="chart-row chart-row--donut-obs">
         <div class="chart-card">
           <div class="chart-head">
             <div class="chart-head-left">
@@ -234,29 +237,58 @@
           </div>
           <div class="chart-body" id="types-chart-wrap"><canvas id="types-chart"></canvas></div>
         </div>
-      </div>
 
-      <!-- Row 2: Top Observers + Weekly -->
-      <div class="chart-row chart-row--3fr2fr">
         <div class="chart-card">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Top Observadores</div>
-              <div class="chart-subtitle">Quem mais registrou</div>
+              <div class="chart-subtitle">Todos os observadores — scroll para ver mais</div>
             </div>
-            <span class="badge badge--teal">RANKING</span>
+            <div class="chart-head-right">
+              <select class="chart-filter-select" id="obs-sector">
+                <option value="">Todos os setores</option>
+              </select>
+              <select class="chart-filter-select" id="obs-mode">
+                <option value="">Todos</option>
+                <option value="Observar">Observar</option>
+                <option value="Comunique">Comunique</option>
+              </select>
+              <span class="badge badge--teal">RANKING</span>
+            </div>
           </div>
-          <div class="chart-body" id="obs-chart-wrap"><canvas id="obs-chart"></canvas></div>
+          <div class="chart-body obs-scroll-wrap" id="obs-chart-wrap">
+            <canvas id="obs-chart"></canvas>
+          </div>
         </div>
+      </div>
 
+      <!-- Row 3: Stacked (full width) -->
+      <div class="chart-row chart-row--full">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Tipo por Departamento</div>
+              <div class="chart-subtitle">Análise cruzada de categorias e áreas</div>
+            </div>
+            <span class="badge badge--orange">BARRAS EMPILHADAS</span>
+          </div>
+          <div class="chart-body" id="stacked-chart-wrap"><canvas id="stacked-chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 4: Semanal (full width, com filtro mês + setor) -->
+      <div class="chart-row chart-row--full">
         <div class="chart-card">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Comunique e Observar por Semana</div>
-              <div class="chart-subtitle">Selecione o setor para ver a evolução semanal</div>
+              <div class="chart-subtitle">Selecione setor e mês para ver a evolução semanal</div>
             </div>
             <div class="chart-head-right">
-              <select class="weekly-select" id="weekly-sector">
+              <select class="chart-filter-select" id="weekly-month">
+                <option value="">Todos os meses</option>
+              </select>
+              <select class="chart-filter-select" id="weekly-sector">
                 <option value="">Selecione o setor...</option>
               </select>
               <span class="badge badge--green">SEMANAL</span>
@@ -268,20 +300,6 @@
               Selecione um setor para visualizar os dados semanais
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Row 3: Stacked -->
-      <div class="chart-row chart-row--full">
-        <div class="chart-card">
-          <div class="chart-head">
-            <div class="chart-head-left">
-              <div class="chart-title">Tipo por Departamento</div>
-              <div class="chart-subtitle">Análise cruzada de categorias e áreas</div>
-            </div>
-            <span class="badge badge--orange">BARRAS EMPILHADAS</span>
-          </div>
-          <div class="chart-body" id="stacked-chart-wrap"><canvas id="stacked-chart"></canvas></div>
         </div>
       </div>
 
