@@ -282,8 +282,28 @@ function buildObsChart(sectorFilter, modeFilter) {
 
     destroyChart('obs');
     const canvas = document.getElementById('obs-chart');
+    const wrap   = document.getElementById('obs-chart-wrap');
+
+    if (sorted.length === 0) {
+        canvas.style.display = 'none';
+        if (!wrap.querySelector('.obs-empty')) {
+            const msg = document.createElement('div');
+            msg.className = 'obs-empty weekly-empty';
+            msg.textContent = cols.obs < 0
+                ? 'Coluna de observadores não detectada na planilha'
+                : 'Nenhum observador encontrado para os filtros selecionados';
+            wrap.appendChild(msg);
+        }
+        return;
+    }
+    wrap.querySelector('.obs-empty')?.remove();
+    canvas.style.display = 'block';
+
     const barHeight = 34;
     const totalH = Math.max(sorted.length * barHeight + 20, 60);
+    const wrapW = wrap.clientWidth || 500;
+    canvas.width  = wrapW;
+    canvas.style.width  = wrapW + 'px';
     canvas.style.height = totalH + 'px';
 
     const ctx = canvas.getContext('2d');
@@ -296,15 +316,15 @@ function buildObsChart(sectorFilter, modeFilter) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
-                x: { ...SCALE_OPTS.x },
-                y: { ...SCALE_OPTS.y, beginAtZero: undefined, grid: { color: 'transparent' },
-                     ticks: { color: '#cbd5e1', font: { size: 10 } } },
+                x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
+                y: { grid: { color: 'transparent' }, border: { color: 'transparent' },
+                     ticks: { color: '#cbd5e1', font: { size: 11 }, padding: 6 } },
             },
         },
     });
 }
 
-// ─── Weekly Line Chart (filtro setor + mês) ───────────────────────────────────
+// ─── Weekly Bar Chart (filtro setor + mês) ────────────────────────────────────
 function buildWeeklyChart(sector, month) {
     const canvas = document.getElementById('weekly-chart');
     const empty  = document.getElementById('weekly-empty');
@@ -325,7 +345,6 @@ function buildWeeklyChart(sector, month) {
     let labels, data;
 
     if (month && cols.date >= 0) {
-        // Filtrar pelo mês e agrupar em Semana 1-5 do mês
         rows = rows.filter(r => {
             const d = parseDate(r[cols.date]);
             return d && monthLabel(d) === month;
@@ -342,7 +361,6 @@ function buildWeeklyChart(sector, month) {
         labels = allWeeks.filter(k => weekCnt[k] !== undefined);
         data   = labels.map(k => weekCnt[k]);
     } else {
-        // Agrupar por semana ISO
         for (const row of rows) {
             const d = parseDate(cols.date >= 0 ? row[cols.date] : null);
             if (d) {
@@ -367,25 +385,22 @@ function buildWeeklyChart(sector, month) {
     destroyChart('weekly');
     const ctx = canvas.getContext('2d');
     charts.weekly = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels,
             datasets: [{
-                label: sector, data,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(37,99,235,0.12)',
-                pointBackgroundColor: '#60a5fa',
-                pointBorderColor: 'rgba(255,255,255,0.3)',
-                pointBorderWidth: 2,
-                pointRadius: 5, pointHoverRadius: 7,
-                fill: true, tension: 0.35,
+                data,
+                backgroundColor: data.map((_, i) => gcRainbow(i)),
+                borderRadius: 6,
+                borderSkipped: false,
+                borderWidth: 0,
             }],
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
-                x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxRotation: 40 } },
+                x: { ...SCALE_OPTS.x },
                 y: { ...SCALE_OPTS.y },
             },
         },
@@ -469,7 +484,6 @@ function renderDashboard(rows) {
     buildTypesChart(d.typeCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
 
-    // Obs e weekly usam allData diretamente com seus próprios filtros
     const obsSec  = document.getElementById('obs-sector')?.value  || '';
     const obsMode = document.getElementById('obs-mode')?.value    || '';
     buildObsChart(obsSec, obsMode);
@@ -490,21 +504,18 @@ function initDashboard(rows, headers) {
     allData = rows;
     const initial = aggregate(rows);
 
-    // Filtros globais (topo)
     const fMonth  = document.getElementById('filter-month');
     const fSector = document.getElementById('filter-sector');
     [fMonth, fSector].forEach(el => { while (el.options.length > 1) el.remove(1); });
     initial.months.forEach(m => fMonth.add(new Option(m, m)));
     initial.sectors.forEach(s => fSector.add(new Option(s, s)));
 
-    // Filtros do obs chart
     const obsSec = document.getElementById('obs-sector');
     if (obsSec) {
         while (obsSec.options.length > 1) obsSec.remove(1);
         initial.sectors.forEach(s => obsSec.add(new Option(s, s)));
     }
 
-    // Filtros do weekly
     const wSector = document.getElementById('weekly-sector');
     const wMonth  = document.getElementById('weekly-month');
     if (wSector) { while (wSector.options.length > 1) wSector.remove(1); }
@@ -590,7 +601,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fSector.addEventListener('change', applyFilters);
     clearBtn.addEventListener('click', () => { fMonth.value = ''; fSector.value = ''; renderDashboard(allData); });
 
-    // Filtros do Top Observadores
     document.getElementById('obs-sector')?.addEventListener('change', () => {
         buildObsChart(
             document.getElementById('obs-sector').value,
@@ -604,7 +614,6 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     });
 
-    // Filtros do gráfico semanal
     document.getElementById('weekly-sector')?.addEventListener('change', () => {
         buildWeeklyChart(
             document.getElementById('weekly-sector').value,
