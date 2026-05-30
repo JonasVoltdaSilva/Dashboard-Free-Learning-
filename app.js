@@ -31,14 +31,20 @@ function detectCol(headers, keywords) {
     return -1;
 }
 
-// Detecta coluna Observar/Comunique pelos valores (não pelo nome)
+// Detecta coluna Observar/Comunique pelos valores (não pelo nome).
+// Escolhe a coluna com mais ocorrências de "observar"/"comunique",
+// mesmo que a coluna contenha também outros valores.
 function detectModeCol(headers, rows) {
-    const modeSet = new Set(['observar', 'comunique']);
+    let bestIdx = -1, bestScore = 0;
     for (let i = 0; i < headers.length; i++) {
-        const vals = rows.map(r => normalizeStr(String(r[i] ?? ''))).filter(v => v.length > 0);
-        if (vals.length > 0 && vals.every(v => modeSet.has(v))) return i;
+        let matches = 0;
+        for (const r of rows) {
+            const v = normalizeStr(String(r[i] ?? ''));
+            if (v === 'observar' || v === 'comunique') matches++;
+        }
+        if (matches > bestScore) { bestScore = matches; bestIdx = i; }
     }
-    return -1;
+    return bestScore > 0 ? bestIdx : -1;
 }
 
 // ─── Date parsing ─────────────────────────────────────────────────────────────
@@ -283,9 +289,10 @@ function buildObsChart(sectorFilter, modeFilter) {
     destroyChart('obs');
     const canvas = document.getElementById('obs-chart');
     const wrap   = document.getElementById('obs-chart-wrap');
+    const inner  = document.getElementById('obs-chart-inner');
 
     if (sorted.length === 0) {
-        canvas.style.display = 'none';
+        inner.style.display = 'none';
         if (!wrap.querySelector('.obs-empty')) {
             const msg = document.createElement('div');
             msg.className = 'obs-empty weekly-empty';
@@ -297,17 +304,12 @@ function buildObsChart(sectorFilter, modeFilter) {
         return;
     }
     wrap.querySelector('.obs-empty')?.remove();
-    canvas.style.display = 'block';
+    inner.style.display = 'block';
 
+    // Altura dinâmica no container interno; o Chart.js (responsive) cuida do
+    // pixel ratio nativamente, garantindo nitidez igual aos outros gráficos.
     const barHeight = 36;
-    const totalH = Math.max(sorted.length * barHeight + 24, 80);
-    const wrapW = wrap.clientWidth || 500;
-    const dpr   = window.devicePixelRatio || 1;
-
-    canvas.width  = Math.round(wrapW * dpr);
-    canvas.height = Math.round(totalH * dpr);
-    canvas.style.width  = wrapW + 'px';
-    canvas.style.height = totalH + 'px';
+    inner.style.height = Math.max(sorted.length * barHeight + 24, 80) + 'px';
 
     const ctx = canvas.getContext('2d');
     charts.obs = new Chart(ctx, {
@@ -315,9 +317,8 @@ function buildObsChart(sectorFilter, modeFilter) {
         data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 5, borderSkipped: 'left', borderWidth: 0 }] },
         options: {
             indexAxis: 'y',
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
-            devicePixelRatio: dpr,
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
@@ -348,38 +349,36 @@ function buildWeeklyChart(sector, month) {
         rows = rows.filter(r => String(r[cols.dept] ?? '').trim() === sector);
     }
 
-    const weekCnt = {};
-    let labels, data;
-
+    // Função que define a chave da semana (do mês ou ISO) para cada data
+    let weekKeyFn, orderWeeks;
     if (month && cols.date >= 0) {
-        // Filtrar pelo mês e agrupar em Semana 1-5 do mês
         rows = rows.filter(r => {
             const d = parseDate(r[cols.date]);
             return d && monthLabel(d) === month;
         });
-        for (const row of rows) {
-            const d = parseDate(cols.date >= 0 ? row[cols.date] : null);
-            if (d) {
-                const wom = Math.min(Math.ceil(d.getDate() / 7), 5);
-                const key = `Semana ${wom}`;
-                weekCnt[key] = (weekCnt[key] || 0) + 1;
-            }
-        }
-        const allWeeks = ['Semana 1','Semana 2','Semana 3','Semana 4','Semana 5'];
-        labels = allWeeks.filter(k => weekCnt[k] !== undefined);
-        data   = labels.map(k => weekCnt[k]);
+        weekKeyFn  = d => `Semana ${Math.min(Math.ceil(d.getDate() / 7), 5)}`;
+        orderWeeks = present => ['Semana 1','Semana 2','Semana 3','Semana 4','Semana 5'].filter(k => present.has(k));
     } else {
-        // Agrupar por semana ISO
-        for (const row of rows) {
-            const d = parseDate(cols.date >= 0 ? row[cols.date] : null);
-            if (d) {
-                const wk = isoWeek(d);
-                weekCnt[wk] = (weekCnt[wk] || 0) + 1;
-            }
-        }
-        labels = Object.keys(weekCnt).sort();
-        data   = labels.map(k => weekCnt[k]);
+        weekKeyFn  = d => isoWeek(d);
+        orderWeeks = present => [...present].sort();
     }
+
+    // Conta Comunique / Observar / Outros por semana
+    const counts = {};               // semana -> { comunique, observar, outros }
+    const present = new Set();
+    for (const row of rows) {
+        const d = parseDate(cols.date >= 0 ? row[cols.date] : null);
+        if (!d) continue;
+        const wk = weekKeyFn(d);
+        present.add(wk);
+        if (!counts[wk]) counts[wk] = { comunique: 0, observar: 0, outros: 0 };
+        const mode = cols.mode >= 0 ? normalizeStr(String(row[cols.mode] ?? '')) : '';
+        if (mode === 'comunique')      counts[wk].comunique++;
+        else if (mode === 'observar')  counts[wk].observar++;
+        else                           counts[wk].outros++;
+    }
+
+    const labels = orderWeeks(present);
 
     if (labels.length === 0) {
         destroyChart('weekly');
@@ -391,23 +390,30 @@ function buildWeeklyChart(sector, month) {
     canvas.style.display = 'block';
     empty.style.display  = 'none';
 
+    const datasets = [
+        { label: 'Comunique', data: labels.map(w => counts[w].comunique), backgroundColor: '#3b82f6', borderRadius: 6, borderSkipped: false },
+        { label: 'Observar',  data: labels.map(w => counts[w].observar),  backgroundColor: '#10b981', borderRadius: 6, borderSkipped: false },
+        { label: 'Outros',    data: labels.map(w => counts[w].outros),    backgroundColor: '#f59e0b', borderRadius: 6, borderSkipped: false },
+    ];
+
     destroyChart('weekly');
     const ctx = canvas.getContext('2d');
     charts.weekly = new Chart(ctx, {
         type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                data,
-                backgroundColor: data.map((_, i) => gcRainbow(i)),
-                borderRadius: 6,
-                borderSkipped: false,
-                borderWidth: 0,
-            }],
-        },
+        data: { labels, datasets },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#cbd5e1', font: { size: 11 },
+                        usePointStyle: true, pointStyle: 'circle',
+                        boxWidth: 8, boxHeight: 8, padding: 14,
+                    },
+                },
+                tooltip: { ...TOOLTIP_OPTS, mode: 'index', intersect: false },
+            },
             scales: {
                 x: { ...SCALE_OPTS.x },
                 y: { ...SCALE_OPTS.y },

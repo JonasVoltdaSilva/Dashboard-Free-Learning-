@@ -727,7 +727,8 @@ html, body {
 .obs-scroll-wrap::-webkit-scrollbar { width: 4px; }
 .obs-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
 .obs-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 4px; }
-#obs-chart-wrap canvas { display: block; width: 100% !important; }
+#obs-chart-inner { position: relative; width: 100%; }
+#obs-chart-inner canvas { display: block; }
 
 /* Weekly empty state */
 .weekly-empty {
