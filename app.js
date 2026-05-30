@@ -282,6 +282,23 @@ function buildObsChart(sectorFilter, modeFilter) {
 
     destroyChart('obs');
     const canvas = document.getElementById('obs-chart');
+    const wrap   = document.getElementById('obs-chart-wrap');
+
+    if (sorted.length === 0) {
+        canvas.style.display = 'none';
+        if (!wrap.querySelector('.obs-empty')) {
+            const msg = document.createElement('div');
+            msg.className = 'obs-empty weekly-empty';
+            msg.textContent = cols.obs < 0
+                ? 'Coluna de observadores não detectada na planilha'
+                : 'Nenhum observador encontrado para os filtros selecionados';
+            wrap.appendChild(msg);
+        }
+        return;
+    }
+    wrap.querySelector('.obs-empty')?.remove();
+    canvas.style.display = 'block';
+
     const barHeight = 34;
     const totalH = Math.max(sorted.length * barHeight + 20, 60);
     canvas.style.height = totalH + 'px';
