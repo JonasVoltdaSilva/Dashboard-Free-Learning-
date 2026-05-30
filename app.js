@@ -301,6 +301,9 @@ function buildObsChart(sectorFilter, modeFilter) {
 
     const barHeight = 34;
     const totalH = Math.max(sorted.length * barHeight + 20, 60);
+    const wrapW = wrap.clientWidth || 500;
+    canvas.width  = wrapW;
+    canvas.style.width  = wrapW + 'px';
     canvas.style.height = totalH + 'px';
 
     const ctx = canvas.getContext('2d');
@@ -313,15 +316,15 @@ function buildObsChart(sectorFilter, modeFilter) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
-                x: { ...SCALE_OPTS.x },
-                y: { ...SCALE_OPTS.y, beginAtZero: undefined, grid: { color: 'transparent' },
-                     ticks: { color: '#cbd5e1', font: { size: 10 } } },
+                x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
+                y: { grid: { color: 'transparent' }, border: { color: 'transparent' },
+                     ticks: { color: '#cbd5e1', font: { size: 11 }, padding: 6 } },
             },
         },
     });
 }
 
-// ─── Weekly Line Chart (filtro setor + mês) ───────────────────────────────────
+// ─── Weekly Bar Chart (filtro setor + mês) ────────────────────────────────────
 function buildWeeklyChart(sector, month) {
     const canvas = document.getElementById('weekly-chart');
     const empty  = document.getElementById('weekly-empty');
@@ -384,25 +387,22 @@ function buildWeeklyChart(sector, month) {
     destroyChart('weekly');
     const ctx = canvas.getContext('2d');
     charts.weekly = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels,
             datasets: [{
-                label: sector, data,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(37,99,235,0.12)',
-                pointBackgroundColor: '#60a5fa',
-                pointBorderColor: 'rgba(255,255,255,0.3)',
-                pointBorderWidth: 2,
-                pointRadius: 5, pointHoverRadius: 7,
-                fill: true, tension: 0.35,
+                data,
+                backgroundColor: data.map((_, i) => gcRainbow(i)),
+                borderRadius: 6,
+                borderSkipped: false,
+                borderWidth: 0,
             }],
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
-                x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxRotation: 40 } },
+                x: { ...SCALE_OPTS.x },
                 y: { ...SCALE_OPTS.y },
             },
         },
