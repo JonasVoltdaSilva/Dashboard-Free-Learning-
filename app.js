@@ -299,10 +299,13 @@ function buildObsChart(sectorFilter, modeFilter) {
     wrap.querySelector('.obs-empty')?.remove();
     canvas.style.display = 'block';
 
-    const barHeight = 34;
-    const totalH = Math.max(sorted.length * barHeight + 20, 60);
+    const barHeight = 36;
+    const totalH = Math.max(sorted.length * barHeight + 24, 80);
     const wrapW = wrap.clientWidth || 500;
-    canvas.width  = wrapW;
+    const dpr   = window.devicePixelRatio || 1;
+
+    canvas.width  = Math.round(wrapW * dpr);
+    canvas.height = Math.round(totalH * dpr);
     canvas.style.width  = wrapW + 'px';
     canvas.style.height = totalH + 'px';
 
@@ -314,11 +317,15 @@ function buildObsChart(sectorFilter, modeFilter) {
             indexAxis: 'y',
             responsive: false,
             maintainAspectRatio: false,
+            devicePixelRatio: dpr,
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
-                y: { grid: { color: 'transparent' }, border: { color: 'transparent' },
-                     ticks: { color: '#cbd5e1', font: { size: 11 }, padding: 6 } },
+                y: {
+                    grid: { color: 'transparent' },
+                    border: { color: 'transparent' },
+                    ticks: { color: '#e2e8f0', font: { size: 12, weight: '500' }, padding: 8 },
+                },
             },
         },
     });
