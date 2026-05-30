@@ -225,7 +225,34 @@
         </div>
       </div>
 
-      <!-- Row 2: Donut (menor) + Top Observadores (maior, com scroll e filtros) -->
+      <!-- Row 2: Semanal (full width, logo após departamento) -->
+      <div class="chart-row chart-row--full">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Comunique e Observar por Semana</div>
+              <div class="chart-subtitle">Selecione setor e mês para ver a evolução semanal</div>
+            </div>
+            <div class="chart-head-right">
+              <select class="chart-filter-select" id="weekly-month">
+                <option value="">Todos os meses</option>
+              </select>
+              <select class="chart-filter-select" id="weekly-sector">
+                <option value="">Selecione o setor...</option>
+              </select>
+              <span class="badge badge--green">SEMANAL</span>
+            </div>
+          </div>
+          <div class="chart-body" id="weekly-chart-wrap">
+            <canvas id="weekly-chart" style="display:none"></canvas>
+            <div class="weekly-empty" id="weekly-empty">
+              Selecione um setor para visualizar os dados semanais
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Donut + Top Observadores (maiores) -->
       <div class="chart-row chart-row--donut-obs">
         <div class="chart-card">
           <div class="chart-head">
@@ -262,7 +289,7 @@
         </div>
       </div>
 
-      <!-- Row 3: Stacked (full width) -->
+      <!-- Row 4: Stacked (full width, menor) -->
       <div class="chart-row chart-row--full">
         <div class="chart-card">
           <div class="chart-head">
@@ -273,33 +300,6 @@
             <span class="badge badge--orange">BARRAS EMPILHADAS</span>
           </div>
           <div class="chart-body" id="stacked-chart-wrap"><canvas id="stacked-chart"></canvas></div>
-        </div>
-      </div>
-
-      <!-- Row 4: Semanal (full width, com filtro mês + setor) -->
-      <div class="chart-row chart-row--full">
-        <div class="chart-card">
-          <div class="chart-head">
-            <div class="chart-head-left">
-              <div class="chart-title">Comunique e Observar por Semana</div>
-              <div class="chart-subtitle">Selecione setor e mês para ver a evolução semanal</div>
-            </div>
-            <div class="chart-head-right">
-              <select class="chart-filter-select" id="weekly-month">
-                <option value="">Todos os meses</option>
-              </select>
-              <select class="chart-filter-select" id="weekly-sector">
-                <option value="">Selecione o setor...</option>
-              </select>
-              <span class="badge badge--green">SEMANAL</span>
-            </div>
-          </div>
-          <div class="chart-body" id="weekly-chart-wrap">
-            <canvas id="weekly-chart" style="display:none"></canvas>
-            <div class="weekly-empty" id="weekly-empty">
-              Selecione um setor para visualizar os dados semanais
-            </div>
-          </div>
         </div>
       </div>
 
