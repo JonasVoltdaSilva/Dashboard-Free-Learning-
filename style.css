@@ -711,13 +711,13 @@ html, body {
 
 /* Fixed heights */
 #dept-chart-wrap    { height: 400px; }
-#types-chart-wrap   { height: 380px; }
-#stacked-chart-wrap { height: 420px; }
+#types-chart-wrap   { height: 480px; }
+#stacked-chart-wrap { height: 290px; }
 #weekly-chart-wrap  { height: 320px; min-height: 320px; }
 
 /* Obs scrollable */
 .obs-scroll-wrap {
-    height: 420px;
+    height: 520px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
