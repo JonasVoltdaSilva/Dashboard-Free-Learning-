@@ -710,7 +710,7 @@ html, body {
 .chart-body canvas { display: block; }
 
 /* Fixed heights — flex-shrink: 0 prevents flex from collapsing these */
-#dept-chart-wrap    { height: 240px;  flex-shrink: 0; }
+#dept-chart-wrap    { height: 120px;  flex-shrink: 0; }
 #types-chart-wrap   { height: 720px;  flex-shrink: 0; }
 #stacked-chart-wrap { height: 174px;  flex-shrink: 0; }
 #weekly-chart-wrap  { height: 320px;  min-height: 320px; flex-shrink: 0; }
