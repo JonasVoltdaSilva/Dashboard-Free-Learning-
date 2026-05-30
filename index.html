@@ -8,11 +8,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════ UPLOAD SCREEN -->
+<!-- UPLOAD SCREEN -->
 <div id="upload-screen">
 
   <div class="upload-diffuser" aria-hidden="true"></div>
@@ -65,11 +65,11 @@
 </div>
 
 
-<!-- ═════════════════════════════════════════════════ DASHBOARD SCREEN -->
+<!-- DASHBOARD SCREEN -->
 <div id="dashboard-screen" class="hidden">
   <div class="dash-wrap">
 
-    <!-- ── Sidebar ── -->
+    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-logo">FL</div>
 
@@ -110,7 +110,7 @@
       </div>
     </aside>
 
-    <!-- ── Main Content ── -->
+    <!-- Main Content -->
     <div class="dash-main">
 
       <!-- Top bar -->
@@ -284,7 +284,7 @@
             </div>
           </div>
           <div class="chart-body obs-scroll-wrap" id="obs-chart-wrap">
-            <canvas id="obs-chart"></canvas>
+            <div id="obs-chart-inner"><canvas id="obs-chart"></canvas></div>
           </div>
         </div>
       </div>
@@ -307,6 +307,6 @@
   </div>
 </div>
 
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
