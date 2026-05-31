@@ -328,6 +328,7 @@ function buildTypesChart(typeCnt) {
                                 text: `${short}  ${pct}%`,
                                 fillStyle: chart.data.datasets[0].backgroundColor[i],
                                 strokeStyle: chart.data.datasets[0].backgroundColor[i],
+                                fontColor: '#e2e8f0', color: '#e2e8f0',
                                 pointStyle: 'circle', lineWidth: 0, hidden: false, index: i,
                             };
                         }),
