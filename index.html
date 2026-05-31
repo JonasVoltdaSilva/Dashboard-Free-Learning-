@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Free Learning - Dashboard</title>
+  <title>Bunge - Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 
@@ -19,7 +19,20 @@
 
   <header class="header">
     <div class="brand">
-      <span class="brand-name">Free Learning</span>
+      <span class="brand-logo" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="26" height="26" role="img" aria-label="Bunge">
+          <defs><clipPath id="bgClipHdr"><circle cx="24" cy="24" r="21"/></clipPath></defs>
+          <circle cx="24" cy="24" r="21" fill="#0b4ea2"/>
+          <g clip-path="url(#bgClipHdr)" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round">
+            <line x1="3" y1="14" x2="45" y2="14"/>
+            <line x1="3" y1="20" x2="45" y2="20"/>
+            <line x1="3" y1="26" x2="45" y2="26"/>
+            <line x1="3" y1="32" x2="45" y2="32"/>
+            <line x1="3" y1="38" x2="45" y2="38"/>
+          </g>
+        </svg>
+      </span>
+      <span class="brand-name">Bunge</span>
       <span class="brand-badge">DASHBOARD</span>
     </div>
   </header>
@@ -71,10 +84,22 @@
 
     <!-- ── Sidebar ── -->
     <aside class="sidebar">
-      <div class="sidebar-logo">FL</div>
+      <div class="sidebar-logo" title="Bunge">
+        <svg viewBox="0 0 48 48" width="30" height="30" role="img" aria-label="Bunge">
+          <defs><clipPath id="bgClipSide"><circle cx="24" cy="24" r="21"/></clipPath></defs>
+          <circle cx="24" cy="24" r="21" fill="#0b4ea2"/>
+          <g clip-path="url(#bgClipSide)" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round">
+            <line x1="3" y1="14" x2="45" y2="14"/>
+            <line x1="3" y1="20" x2="45" y2="20"/>
+            <line x1="3" y1="26" x2="45" y2="26"/>
+            <line x1="3" y1="32" x2="45" y2="32"/>
+            <line x1="3" y1="38" x2="45" y2="38"/>
+          </g>
+        </svg>
+      </div>
 
       <nav class="sidebar-nav">
-        <button class="snav-btn snav-btn--active" title="Dashboard">
+        <button class="snav-btn snav-btn--active" id="nav-dashboard-btn" title="Dashboard">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
             <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
@@ -89,7 +114,7 @@
           </svg>
         </button>
 
-        <button class="snav-btn" title="Gráficos">
+        <button class="snav-btn" id="nav-charts-btn" title="Gráficos">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="20" x2="18" y2="10"/>
             <line x1="12" y1="20" x2="12" y2="4"/>
@@ -97,7 +122,7 @@
           </svg>
         </button>
 
-        <button class="snav-btn" title="Configurações">
+        <button class="snav-btn" id="nav-settings-btn" title="Configurações">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -106,7 +131,7 @@
       </nav>
 
       <div class="sidebar-foot">
-        <div class="sidebar-avatar">FL</div>
+        <div class="sidebar-avatar" title="Bunge">B</div>
       </div>
     </aside>
 
@@ -212,8 +237,8 @@
       </div>
 
       <!-- Row 1: Dept Bar (full width, largo) -->
-      <div class="chart-row chart-row--full">
-        <div class="chart-card">
+      <div class="chart-row chart-row--full" id="row-dept">
+        <div class="chart-card" id="card-dept">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Ocorrências por Departamento</div>
@@ -226,8 +251,8 @@
       </div>
 
       <!-- Row 2: Semanal (full width, logo após departamento) -->
-      <div class="chart-row chart-row--full">
-        <div class="chart-card">
+      <div class="chart-row chart-row--full" id="row-weekly">
+        <div class="chart-card" id="card-weekly">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Comunique e Observar por Semana</div>
@@ -252,9 +277,28 @@
         </div>
       </div>
 
-      <!-- Row 3: Donut + Top Observadores (maiores) -->
-      <div class="chart-row chart-row--donut-obs">
-        <div class="chart-card">
+      <!-- Row 3: Tendência Mensal (novo, full width) -->
+      <div class="chart-row chart-row--full" id="row-trend">
+        <div class="chart-card" id="card-trend">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Tendência Mensal de Ocorrências</div>
+              <div class="chart-subtitle">Evolução do total de registros ao longo dos meses</div>
+            </div>
+            <span class="badge badge--indigo">LINHA</span>
+          </div>
+          <div class="chart-body" id="trend-chart-wrap">
+            <canvas id="trend-chart"></canvas>
+            <div class="weekly-empty" id="trend-empty" style="display:none">
+              Nenhuma coluna de data detectada na planilha
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 4: Donut + Top Observadores (maiores) -->
+      <div class="chart-row chart-row--donut-obs" id="row-donut-obs">
+        <div class="chart-card" id="card-types">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Tipos de Ocorrência</div>
@@ -265,7 +309,7 @@
           <div class="chart-body" id="types-chart-wrap"><canvas id="types-chart"></canvas></div>
         </div>
 
-        <div class="chart-card">
+        <div class="chart-card" id="card-obs">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Top Observadores</div>
@@ -289,9 +333,9 @@
         </div>
       </div>
 
-      <!-- Row 4: Stacked (full width, menor) -->
-      <div class="chart-row chart-row--full">
-        <div class="chart-card">
+      <!-- Row 5: Stacked (full width, menor) -->
+      <div class="chart-row chart-row--full" id="row-stacked">
+        <div class="chart-card" id="card-stacked">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Tipo por Departamento</div>
@@ -310,6 +354,112 @@
   <!-- end dash-wrap -->
 </div>
 
-<script src="app.js?v=13"></script>
+
+<!-- ═════════════════════════════════════════════════ MODAL: GRÁFICOS -->
+<div class="modal-overlay hidden" id="charts-modal">
+  <div class="modal" role="dialog" aria-labelledby="charts-modal-title">
+    <div class="modal-head">
+      <div>
+        <h2 class="modal-title" id="charts-modal-title">Gráficos</h2>
+        <p class="modal-sub">Escolha quais gráficos exibir no dashboard</p>
+      </div>
+      <button class="modal-close" data-close title="Fechar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body" id="charts-toggle-list">
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Ocorrências por Departamento</span><span class="setting-desc">Barras por área</span></span>
+        <span class="switch"><input type="checkbox" data-chart="dept" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Comunique e Observar por Semana</span><span class="setting-desc">Barras agrupadas semanais</span></span>
+        <span class="switch"><input type="checkbox" data-chart="weekly" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Tendência Mensal</span><span class="setting-desc">Linha de evolução no tempo</span></span>
+        <span class="switch"><input type="checkbox" data-chart="trend" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Tipos de Ocorrência</span><span class="setting-desc">Pizza por categoria</span></span>
+        <span class="switch"><input type="checkbox" data-chart="types" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Top Observadores</span><span class="setting-desc">Ranking de observadores</span></span>
+        <span class="switch"><input type="checkbox" data-chart="obs" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Tipo por Departamento</span><span class="setting-desc">Barras empilhadas cruzadas</span></span>
+        <span class="switch"><input type="checkbox" data-chart="stacked" checked><span class="slider"></span></span>
+      </label>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═════════════════════════════════════════════════ MODAL: CONFIGURAÇÕES -->
+<div class="modal-overlay hidden" id="settings-modal">
+  <div class="modal" role="dialog" aria-labelledby="settings-modal-title">
+    <div class="modal-head">
+      <div>
+        <h2 class="modal-title" id="settings-modal-title">Configurações</h2>
+        <p class="modal-sub">Personalize a aparência e o comportamento</p>
+      </div>
+      <button class="modal-close" data-close title="Fechar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="setting-row">
+        <span class="setting-info"><span class="setting-name">Cor de destaque</span><span class="setting-desc">Tema visual do painel</span></span>
+        <div class="accent-swatches" id="accent-swatches">
+          <button class="swatch" data-accent="blue"   style="--sw:#3b82f6" title="Azul"></button>
+          <button class="swatch" data-accent="green"  style="--sw:#10b981" title="Verde"></button>
+          <button class="swatch" data-accent="purple" style="--sw:#8b5cf6" title="Roxo"></button>
+          <button class="swatch" data-accent="amber"  style="--sw:#f59e0b" title="Âmbar"></button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-info"><span class="setting-name">Itens nos rankings</span><span class="setting-desc">Máx. de barras em departamentos</span></span>
+        <select class="filter-select setting-select" id="set-topn">
+          <option value="10">Top 10</option>
+          <option value="15">Top 15</option>
+          <option value="20">Top 20</option>
+          <option value="0">Todos</option>
+        </select>
+      </div>
+
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Animações dos gráficos</span><span class="setting-desc">Efeitos de transição</span></span>
+        <span class="switch"><input type="checkbox" id="set-animations" checked><span class="slider"></span></span>
+      </label>
+
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Modo compacto</span><span class="setting-desc">Reduz espaçamentos</span></span>
+        <span class="switch"><input type="checkbox" id="set-compact"><span class="slider"></span></span>
+      </label>
+
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Alto contraste</span><span class="setting-desc">Reduz o desfoque do vidro</span></span>
+        <span class="switch"><input type="checkbox" id="set-contrast"><span class="slider"></span></span>
+      </label>
+
+      <div class="setting-row setting-row--actions">
+        <button class="btn-reset" id="set-reset">Restaurar padrões</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js?v=14"></script>
 </body>
 </html>

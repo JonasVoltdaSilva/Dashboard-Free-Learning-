@@ -5,6 +5,40 @@ let allData = [];
 let cols = { dept: -1, type: -1, obs: -1, date: -1, mode: -1 };
 let charts = {};
 let cachedProcessed = null;
+let lastRows = [];
+
+// ─── Settings (persistidas em localStorage) ────────────────────────────────────
+const ACCENTS = {
+    blue:   { main: '#3b82f6', soft: 'rgba(59,130,246,0.22)', glow: 'rgba(37,99,235,0.25)' },
+    green:  { main: '#10b981', soft: 'rgba(16,185,129,0.22)', glow: 'rgba(16,185,129,0.25)' },
+    purple: { main: '#8b5cf6', soft: 'rgba(139,92,246,0.22)', glow: 'rgba(124,58,237,0.25)' },
+    amber:  { main: '#f59e0b', soft: 'rgba(245,158,11,0.22)', glow: 'rgba(245,158,11,0.25)' },
+};
+const DEFAULT_SETTINGS = { accent: 'blue', topN: 20, animations: true, compact: false, contrast: false };
+const DEFAULT_VISIBLE  = { dept: true, weekly: true, trend: true, types: true, obs: true, stacked: true };
+
+let SETTINGS = { ...DEFAULT_SETTINGS };
+let VISIBLE  = { ...DEFAULT_VISIBLE };
+
+function loadPrefs() {
+    try {
+        const s = JSON.parse(localStorage.getItem('bunge_settings') || '{}');
+        SETTINGS = { ...DEFAULT_SETTINGS, ...s };
+    } catch { SETTINGS = { ...DEFAULT_SETTINGS }; }
+    try {
+        const v = JSON.parse(localStorage.getItem('bunge_visible') || '{}');
+        VISIBLE = { ...DEFAULT_VISIBLE, ...v };
+    } catch { VISIBLE = { ...DEFAULT_VISIBLE }; }
+}
+function savePrefs() {
+    localStorage.setItem('bunge_settings', JSON.stringify(SETTINGS));
+    localStorage.setItem('bunge_visible', JSON.stringify(VISIBLE));
+}
+
+// animation helper para os gráficos (respeita a configuração)
+const anim = () => (SETTINGS.animations ? { duration: 700 } : false);
+// quantos itens nos rankings (0 = todos)
+const topCount = arr => (SETTINGS.topN > 0 ? arr.slice(0, SETTINGS.topN) : arr);
 
 // ─── Column detection ─────────────────────────────────────────────────────────
 const KEYWORDS = {
@@ -32,8 +66,6 @@ function detectCol(headers, keywords) {
 }
 
 // Detecta coluna Observar/Comunique pelos valores (não pelo nome).
-// Escolhe a coluna com mais ocorrências de "observar"/"comunique",
-// mesmo que a coluna contenha também outros valores.
 function detectModeCol(headers, rows) {
     let bestIdx = -1, bestScore = 0;
     for (let i = 0; i < headers.length; i++) {
@@ -80,7 +112,7 @@ function isoWeek(d) {
 
 // ─── Aggregate data ───────────────────────────────────────────────────────────
 function aggregate(rows) {
-    const deptCnt = {}, typeCnt = {}, obsCnt = {}, typeByDept = {};
+    const deptCnt = {}, typeCnt = {}, obsCnt = {}, typeByDept = {}, monthCnt = {};
     const monthKeys = new Set(), sectorSet = new Set();
 
     for (const row of rows) {
@@ -93,7 +125,7 @@ function aggregate(rows) {
         if (dept) { deptCnt[dept] = (deptCnt[dept] || 0) + 1; sectorSet.add(dept); }
         if (type) { typeCnt[type] = (typeCnt[type] || 0) + 1; }
         if (obs)  { obsCnt[obs]   = (obsCnt[obs]   || 0) + 1; }
-        if (date) { monthKeys.add(monthLabel(date)); }
+        if (date) { const ml = monthLabel(date); monthKeys.add(ml); monthCnt[ml] = (monthCnt[ml] || 0) + 1; }
         if (dept && type) {
             if (!typeByDept[dept]) typeByDept[dept] = {};
             typeByDept[dept][type] = (typeByDept[dept][type] || 0) + 1;
@@ -106,7 +138,7 @@ function aggregate(rows) {
     });
 
     return {
-        deptCnt, typeCnt, obsCnt, typeByDept,
+        deptCnt, typeCnt, obsCnt, typeByDept, monthCnt,
         months: sortedMonths,
         sectors: [...sectorSet].sort(),
         total: rows.length,
@@ -180,7 +212,7 @@ function destroyChart(key) { if (charts[key]) { charts[key].destroy(); charts[ke
 
 // ─── Dept Bar Chart ───────────────────────────────────────────────────────────
 function buildDeptChart(deptCnt) {
-    const sorted = Object.entries(deptCnt).sort((a,b) => b[1]-a[1]).slice(0, 20);
+    const sorted = topCount(Object.entries(deptCnt).sort((a,b) => b[1]-a[1]));
     const labels = sorted.map(([k]) => k.length > 18 ? k.slice(0,18)+'…' : k);
     const data   = sorted.map(([,v]) => v);
     const colors = data.map((_,i) => gcRainbow(i));
@@ -191,7 +223,7 @@ function buildDeptChart(deptCnt) {
         type: 'bar',
         data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false, borderWidth: 0 }] },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false, animation: anim(),
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxRotation: 40 } },
@@ -223,7 +255,7 @@ function buildTypesChart(typeCnt) {
             borderRadius: 6,
         }]},
         options: {
-            responsive: true, maintainAspectRatio: false, cutout: '68%',
+            responsive: true, maintainAspectRatio: false, cutout: '68%', animation: anim(),
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -259,6 +291,58 @@ function buildTypesChart(typeCnt) {
                     }},
                 },
             },
+        },
+    });
+}
+
+// ─── Trend Line Chart (tendência mensal) ──────────────────────────────────────
+function buildTrendChart(months, monthCnt) {
+    const empty  = document.getElementById('trend-empty');
+    const canvas = document.getElementById('trend-chart');
+    destroyChart('trend');
+
+    if (!months || months.length === 0) {
+        canvas.style.display = 'none';
+        empty.style.display  = 'flex';
+        return;
+    }
+    canvas.style.display = 'block';
+    empty.style.display  = 'none';
+
+    const data = months.map(m => monthCnt[m] || 0);
+    const accent = ACCENTS[SETTINGS.accent]?.main || '#3b82f6';
+
+    const ctx = canvas.getContext('2d');
+    charts.trend = new Chart(ctx, {
+        type: 'line',
+        data: { labels: months, datasets: [{
+            label: 'Ocorrências',
+            data,
+            borderColor: accent,
+            backgroundColor: ctx2 => {
+                const { chartArea, ctx: c } = ctx2.chart;
+                if (!chartArea) return 'rgba(59,130,246,0.12)';
+                const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                g.addColorStop(0, accent + '55');
+                g.addColorStop(1, accent + '05');
+                return g;
+            },
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: accent,
+            pointBorderColor: '#0b0b1f',
+            pointBorderWidth: 2,
+        }]},
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: anim(),
+            plugins: {
+                legend: { display: false },
+                tooltip: { ...TOOLTIP_OPTS, callbacks: { label: c => ` ${c.parsed.y.toLocaleString('pt-BR')} ocorrências` } },
+            },
+            scales: { x: { ...SCALE_OPTS.x }, y: { ...SCALE_OPTS.y } },
         },
     });
 }
@@ -306,8 +390,6 @@ function buildObsChart(sectorFilter, modeFilter) {
     wrap.querySelector('.obs-empty')?.remove();
     inner.style.display = 'block';
 
-    // Altura dinâmica no container interno; o Chart.js (responsive) cuida do
-    // pixel ratio nativamente, garantindo nitidez igual aos outros gráficos.
     const barHeight = 36;
     inner.style.height = Math.max(sorted.length * barHeight + 24, 80) + 'px';
 
@@ -319,6 +401,7 @@ function buildObsChart(sectorFilter, modeFilter) {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
+            animation: anim(),
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
@@ -349,7 +432,6 @@ function buildWeeklyChart(sector, month) {
         rows = rows.filter(r => String(r[cols.dept] ?? '').trim() === sector);
     }
 
-    // Função que define a chave da semana (do mês ou ISO) para cada data
     let weekKeyFn, orderWeeks;
     if (month && cols.date >= 0) {
         rows = rows.filter(r => {
@@ -363,8 +445,7 @@ function buildWeeklyChart(sector, month) {
         orderWeeks = present => [...present].sort();
     }
 
-    // Conta Comunique / Observar / Outros por semana
-    const counts = {};               // semana -> { comunique, observar, outros }
+    const counts = {};
     const present = new Set();
     for (const row of rows) {
         const d = parseDate(cols.date >= 0 ? row[cols.date] : null);
@@ -402,7 +483,7 @@ function buildWeeklyChart(sector, month) {
         type: 'bar',
         data: { labels, datasets },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false, animation: anim(),
             plugins: {
                 legend: {
                     position: 'top',
@@ -424,12 +505,12 @@ function buildWeeklyChart(sector, month) {
 
 // ─── Stacked Bar Chart ────────────────────────────────────────────────────────
 function buildStackedChart(typeByDept, typeCnt) {
-    const depts = Object.keys(typeByDept)
+    const depts = topCount(Object.keys(typeByDept)
         .sort((a, b) => {
             const sa = Object.values(typeByDept[a]).reduce((x,y) => x+y, 0);
             const sb = Object.values(typeByDept[b]).reduce((x,y) => x+y, 0);
             return sb - sa;
-        }).slice(0, 20);
+        }));
 
     const types  = Object.keys(typeCnt).sort((a,b) => typeCnt[b] - typeCnt[a]);
     const colors = ['#60a5fa','#a855f7','#2dd4bf','#4ade80','#818cf8','#f472b6','#fb923c','#facc15','#34d399','#67e8f9'];
@@ -449,7 +530,7 @@ function buildStackedChart(typeByDept, typeCnt) {
         type: 'bar',
         data: { labels, datasets },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false, animation: anim(),
             plugins: {
                 legend: {
                     position: 'top',
@@ -473,6 +554,7 @@ function buildStackedChart(typeByDept, typeCnt) {
 
 // ─── KPI counter animation ────────────────────────────────────────────────────
 function animateValue(el, target) {
+    if (!SETTINGS.animations) { el.textContent = target.toLocaleString('pt-BR'); return; }
     const duration = 600;
     const start = performance.now();
     const from = parseInt(el.textContent.replace(/\D/g, '')) || 0;
@@ -487,6 +569,7 @@ function animateValue(el, target) {
 
 // ─── Render dashboard ─────────────────────────────────────────────────────────
 function renderDashboard(rows) {
+    lastRows = rows;
     const d = aggregate(rows);
     cachedProcessed = d;
 
@@ -498,8 +581,8 @@ function renderDashboard(rows) {
     buildDeptChart(d.deptCnt);
     buildTypesChart(d.typeCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
+    buildTrendChart(d.months, d.monthCnt);
 
-    // Obs e weekly usam allData diretamente com seus próprios filtros
     const obsSec  = document.getElementById('obs-sector')?.value  || '';
     const obsMode = document.getElementById('obs-mode')?.value    || '';
     buildObsChart(obsSec, obsMode);
@@ -520,21 +603,18 @@ function initDashboard(rows, headers) {
     allData = rows;
     const initial = aggregate(rows);
 
-    // Filtros globais (topo)
     const fMonth  = document.getElementById('filter-month');
     const fSector = document.getElementById('filter-sector');
     [fMonth, fSector].forEach(el => { while (el.options.length > 1) el.remove(1); });
     initial.months.forEach(m => fMonth.add(new Option(m, m)));
     initial.sectors.forEach(s => fSector.add(new Option(s, s)));
 
-    // Filtros do obs chart
     const obsSec = document.getElementById('obs-sector');
     if (obsSec) {
         while (obsSec.options.length > 1) obsSec.remove(1);
         initial.sectors.forEach(s => obsSec.add(new Option(s, s)));
     }
 
-    // Filtros do weekly
     const wSector = document.getElementById('weekly-sector');
     const wMonth  = document.getElementById('weekly-month');
     if (wSector) { while (wSector.options.length > 1) wSector.remove(1); }
@@ -590,8 +670,74 @@ function handleFile(file) {
     reader.readAsArrayBuffer(file);
 }
 
+// ─── Chart visibility (painel Gráficos) ───────────────────────────────────────
+const CARD_OF = { dept:'card-dept', weekly:'card-weekly', trend:'card-trend', types:'card-types', obs:'card-obs', stacked:'card-stacked' };
+
+function applyChartVisibility() {
+    for (const key in CARD_OF) {
+        const card = document.getElementById(CARD_OF[key]);
+        if (card) card.style.display = VISIBLE[key] ? '' : 'none';
+    }
+    // linhas full-width: esconde a linha se o card estiver oculto
+    [['dept','row-dept'],['weekly','row-weekly'],['trend','row-trend'],['stacked','row-stacked']].forEach(([k, rid]) => {
+        const row = document.getElementById(rid);
+        if (row) row.style.display = VISIBLE[k] ? '' : 'none';
+    });
+    // linha donut+obs: ajusta o layout quando só um dos dois está visível
+    const row = document.getElementById('row-donut-obs');
+    if (row) {
+        const both = VISIBLE.types && VISIBLE.obs;
+        const any  = VISIBLE.types || VISIBLE.obs;
+        row.style.display = any ? '' : 'none';
+        row.classList.toggle('chart-row--donut-obs', both);
+        row.classList.toggle('chart-row--full', !both);
+    }
+    // sincroniza os checkboxes do modal
+    document.querySelectorAll('#charts-toggle-list input[data-chart]').forEach(cb => {
+        cb.checked = !!VISIBLE[cb.dataset.chart];
+    });
+}
+
+// ─── Settings (painel Configurações) ──────────────────────────────────────────
+function applySettings(rerender = false) {
+    const root = document.documentElement;
+    const acc = ACCENTS[SETTINGS.accent] || ACCENTS.blue;
+    root.style.setProperty('--accent', acc.main);
+    root.style.setProperty('--accent-soft', acc.soft);
+    root.style.setProperty('--accent-glow', acc.glow);
+
+    document.body.classList.toggle('compact', SETTINGS.compact);
+    document.body.classList.toggle('high-contrast', SETTINGS.contrast);
+
+    // reflete na UI dos controles
+    document.querySelectorAll('#accent-swatches .swatch').forEach(s =>
+        s.classList.toggle('swatch--active', s.dataset.accent === SETTINGS.accent));
+    const topnSel = document.getElementById('set-topn');
+    if (topnSel) topnSel.value = String(SETTINGS.topN);
+    const a = document.getElementById('set-animations'); if (a) a.checked = SETTINGS.animations;
+    const c = document.getElementById('set-compact');    if (c) c.checked = SETTINGS.compact;
+    const h = document.getElementById('set-contrast');   if (h) h.checked = SETTINGS.contrast;
+
+    if (rerender && lastRows.length) renderDashboard(lastRows);
+}
+
+// ─── Modals ───────────────────────────────────────────────────────────────────
+function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+}
+function closeModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+    document.getElementById('nav-charts-btn')?.classList.remove('snav-btn--active');
+    document.getElementById('nav-settings-btn')?.classList.remove('snav-btn--active');
+    document.getElementById('nav-dashboard-btn')?.classList.add('snav-btn--active');
+}
+
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    loadPrefs();
+    applySettings(false);
+    applyChartVisibility();
+
     const fileInput    = document.getElementById('file-input');
     const dropZone     = document.getElementById('drop-zone');
     const selectBtn    = document.getElementById('select-btn');
@@ -622,29 +768,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Filtros do Top Observadores
     document.getElementById('obs-sector')?.addEventListener('change', () => {
-        buildObsChart(
-            document.getElementById('obs-sector').value,
-            document.getElementById('obs-mode').value
-        );
+        buildObsChart(document.getElementById('obs-sector').value, document.getElementById('obs-mode').value);
     });
     document.getElementById('obs-mode')?.addEventListener('change', () => {
-        buildObsChart(
-            document.getElementById('obs-sector').value,
-            document.getElementById('obs-mode').value
-        );
+        buildObsChart(document.getElementById('obs-sector').value, document.getElementById('obs-mode').value);
     });
 
     // Filtros do gráfico semanal
     document.getElementById('weekly-sector')?.addEventListener('change', () => {
-        buildWeeklyChart(
-            document.getElementById('weekly-sector').value,
-            document.getElementById('weekly-month').value
-        );
+        buildWeeklyChart(document.getElementById('weekly-sector').value, document.getElementById('weekly-month').value);
     });
     document.getElementById('weekly-month')?.addEventListener('change', () => {
-        buildWeeklyChart(
-            document.getElementById('weekly-sector').value,
-            document.getElementById('weekly-month').value
-        );
+        buildWeeklyChart(document.getElementById('weekly-sector').value, document.getElementById('weekly-month').value);
+    });
+
+    // ── Navegação lateral ──
+    document.getElementById('nav-dashboard-btn')?.addEventListener('click', closeModals);
+    document.getElementById('nav-charts-btn')?.addEventListener('click', () => {
+        closeModals();
+        document.getElementById('nav-dashboard-btn')?.classList.remove('snav-btn--active');
+        document.getElementById('nav-charts-btn')?.classList.add('snav-btn--active');
+        openModal('charts-modal');
+    });
+    document.getElementById('nav-settings-btn')?.addEventListener('click', () => {
+        closeModals();
+        document.getElementById('nav-dashboard-btn')?.classList.remove('snav-btn--active');
+        document.getElementById('nav-settings-btn')?.classList.add('snav-btn--active');
+        openModal('settings-modal');
+    });
+
+    // Fechar modais (botão X, clique no overlay, Esc)
+    document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeModals));
+    document.querySelectorAll('.modal-overlay').forEach(ov => {
+        ov.addEventListener('click', e => { if (e.target === ov) closeModals(); });
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+
+    // ── Painel Gráficos: toggles ──
+    document.querySelectorAll('#charts-toggle-list input[data-chart]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            VISIBLE[cb.dataset.chart] = cb.checked;
+            applyChartVisibility();
+            savePrefs();
+        });
+    });
+
+    // ── Painel Configurações: controles ──
+    document.querySelectorAll('#accent-swatches .swatch').forEach(s => {
+        s.addEventListener('click', () => { SETTINGS.accent = s.dataset.accent; applySettings(true); savePrefs(); });
+    });
+    document.getElementById('set-topn')?.addEventListener('change', e => {
+        SETTINGS.topN = parseInt(e.target.value, 10) || 0; applySettings(true); savePrefs();
+    });
+    document.getElementById('set-animations')?.addEventListener('change', e => {
+        SETTINGS.animations = e.target.checked; applySettings(true); savePrefs();
+    });
+    document.getElementById('set-compact')?.addEventListener('change', e => {
+        SETTINGS.compact = e.target.checked; applySettings(false); savePrefs();
+    });
+    document.getElementById('set-contrast')?.addEventListener('change', e => {
+        SETTINGS.contrast = e.target.checked; applySettings(false); savePrefs();
+    });
+    document.getElementById('set-reset')?.addEventListener('click', () => {
+        SETTINGS = { ...DEFAULT_SETTINGS };
+        VISIBLE  = { ...DEFAULT_VISIBLE };
+        applySettings(true);
+        applyChartVisibility();
+        savePrefs();
     });
 });
