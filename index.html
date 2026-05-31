@@ -8,9 +8,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=14">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
+
+<!-- Container de notificações (toasts) -->
+<div id="toast-wrap" aria-live="polite"></div>
 
 <!-- ══════════════════════════════════════════════════════ UPLOAD SCREEN -->
 <div id="upload-screen">
@@ -136,7 +141,7 @@
     </aside>
 
     <!-- ── Main Content ── -->
-    <div class="dash-main">
+    <div class="dash-main" id="dash-main">
 
       <!-- Top bar -->
       <div class="dash-header">
@@ -151,8 +156,11 @@
             </svg>
             FILTROS
           </span>
-          <select class="filter-select" id="filter-month">
-            <option value="">Todos os meses</option>
+          <select class="filter-select" id="filter-from" title="Mês inicial">
+            <option value="">De: início</option>
+          </select>
+          <select class="filter-select" id="filter-to" title="Mês final">
+            <option value="">Até: fim</option>
           </select>
           <select class="filter-select" id="filter-sector">
             <option value="">Todos os setores</option>
@@ -163,6 +171,22 @@
             </svg>
             Limpar
           </button>
+
+          <div class="export-wrap">
+            <button class="btn-export" id="export-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Exportar
+            </button>
+            <div class="export-menu hidden" id="export-menu">
+              <button data-export="excel">Planilha (.xlsx)</button>
+              <button data-export="png">Imagem (.png)</button>
+              <button data-export="pdf">Documento (.pdf)</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -178,14 +202,16 @@
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
             </div>
+            <span class="kpi-delta" id="d-total"></span>
           </div>
           <div class="kpi-card-bottom">
             <p class="kpi-label">Total de Registros</p>
             <p class="kpi-value" id="kpi-total">0</p>
+            <div class="kpi-spark"><canvas id="spark-total"></canvas></div>
           </div>
         </div>
 
-        <div class="kpi-card kpi-card--indigo">
+        <div class="kpi-card kpi-card--violet">
           <div class="kpi-glow"></div>
           <div class="kpi-card-top">
             <div class="kpi-icon-box">
@@ -194,14 +220,16 @@
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
             </div>
+            <span class="kpi-delta" id="d-depts"></span>
           </div>
           <div class="kpi-card-bottom">
             <p class="kpi-label">Departamentos</p>
             <p class="kpi-value" id="kpi-depts">0</p>
+            <div class="kpi-spark"><canvas id="spark-depts"></canvas></div>
           </div>
         </div>
 
-        <div class="kpi-card kpi-card--teal">
+        <div class="kpi-card kpi-card--cyan">
           <div class="kpi-glow"></div>
           <div class="kpi-card-top">
             <div class="kpi-icon-box">
@@ -212,14 +240,16 @@
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </div>
+            <span class="kpi-delta" id="d-obs"></span>
           </div>
           <div class="kpi-card-bottom">
             <p class="kpi-label">Observadores</p>
             <p class="kpi-value" id="kpi-obs">0</p>
+            <div class="kpi-spark"><canvas id="spark-obs"></canvas></div>
           </div>
         </div>
 
-        <div class="kpi-card kpi-card--green">
+        <div class="kpi-card kpi-card--amber">
           <div class="kpi-glow"></div>
           <div class="kpi-card-top">
             <div class="kpi-icon-box">
@@ -227,22 +257,24 @@
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
             </div>
+            <span class="kpi-delta" id="d-types"></span>
           </div>
           <div class="kpi-card-bottom">
             <p class="kpi-label">Tipos de Ocorrência</p>
             <p class="kpi-value" id="kpi-types">0</p>
+            <div class="kpi-spark"><canvas id="spark-types"></canvas></div>
           </div>
         </div>
 
       </div>
 
-      <!-- Row 1: Dept Bar (full width, largo) -->
+      <!-- Row: Dept Bar (full width) — clique filtra o setor -->
       <div class="chart-row chart-row--full" id="row-dept">
         <div class="chart-card" id="card-dept">
           <div class="chart-head">
             <div class="chart-head-left">
               <div class="chart-title">Ocorrências por Departamento</div>
-              <div class="chart-subtitle">Distribuição total por área</div>
+              <div class="chart-subtitle">Clique numa barra para filtrar o dashboard por setor</div>
             </div>
             <span class="badge badge--blue">BARRAS</span>
           </div>
@@ -250,7 +282,7 @@
         </div>
       </div>
 
-      <!-- Row 2: Semanal (full width, logo após departamento) -->
+      <!-- Row: Semanal (full width) -->
       <div class="chart-row chart-row--full" id="row-weekly">
         <div class="chart-card" id="card-weekly">
           <div class="chart-head">
@@ -277,7 +309,7 @@
         </div>
       </div>
 
-      <!-- Row 3: Tendência Mensal (novo, full width) -->
+      <!-- Row: Tendência Mensal (full width) -->
       <div class="chart-row chart-row--full" id="row-trend">
         <div class="chart-card" id="card-trend">
           <div class="chart-head">
@@ -296,7 +328,58 @@
         </div>
       </div>
 
-      <!-- Row 4: Donut + Top Observadores (maiores) -->
+      <!-- Row: Medidor + Pareto -->
+      <div class="chart-row chart-row--gauge-pareto" id="row-gauge-pareto">
+        <div class="chart-card" id="card-gauge">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Comunique vs. Observar</div>
+              <div class="chart-subtitle">Proporção entre os modos de registro</div>
+            </div>
+            <span class="badge badge--teal">MEDIDOR</span>
+          </div>
+          <div class="chart-body" id="gauge-chart-wrap">
+            <canvas id="gauge-chart"></canvas>
+            <div class="gauge-center" id="gauge-center"></div>
+            <div class="weekly-empty" id="gauge-empty" style="display:none">
+              Coluna Comunique/Observar não detectada
+            </div>
+          </div>
+          <div class="gauge-legend" id="gauge-legend"></div>
+        </div>
+
+        <div class="chart-card" id="card-pareto">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Pareto de Tipos de Ocorrência</div>
+              <div class="chart-subtitle">Os tipos que mais impactam (regra 80/20)</div>
+            </div>
+            <span class="badge badge--orange">PARETO</span>
+          </div>
+          <div class="chart-body" id="pareto-chart-wrap"><canvas id="pareto-chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row: Mapa de calor (full width) -->
+      <div class="chart-row chart-row--full" id="row-heatmap">
+        <div class="chart-card" id="card-heatmap">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Mapa de Calor — Dia da Semana × Mês</div>
+              <div class="chart-subtitle">Identifique quando as ocorrências se concentram</div>
+            </div>
+            <span class="badge badge--blue">CALOR</span>
+          </div>
+          <div class="chart-body chart-body--auto" id="heatmap-wrap">
+            <div class="heatmap" id="heatmap"></div>
+            <div class="weekly-empty" id="heatmap-empty" style="display:none">
+              Nenhuma coluna de data detectada na planilha
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row: Donut + Top Observadores -->
       <div class="chart-row chart-row--donut-obs" id="row-donut-obs">
         <div class="chart-card" id="card-types">
           <div class="chart-head">
@@ -333,7 +416,7 @@
         </div>
       </div>
 
-      <!-- Row 5: Stacked (full width, menor) -->
+      <!-- Row: Stacked (full width) -->
       <div class="chart-row chart-row--full" id="row-stacked">
         <div class="chart-card" id="card-stacked">
           <div class="chart-head">
@@ -344,6 +427,28 @@
             <span class="badge badge--orange">BARRAS EMPILHADAS</span>
           </div>
           <div class="chart-body" id="stacked-chart-wrap"><canvas id="stacked-chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row: Tabela de dados (full width) -->
+      <div class="chart-row chart-row--full" id="row-table">
+        <div class="chart-card" id="card-table">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Tabela de Dados</div>
+              <div class="chart-subtitle" id="table-count">Registros filtrados — clique no cabeçalho para ordenar</div>
+            </div>
+            <div class="chart-head-right">
+              <input type="text" class="table-search" id="table-search" placeholder="Buscar...">
+              <span class="badge badge--indigo">DADOS</span>
+            </div>
+          </div>
+          <div class="table-scroll" id="table-scroll">
+            <table class="data-table" id="data-table">
+              <thead id="data-thead"></thead>
+              <tbody id="data-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -361,7 +466,7 @@
     <div class="modal-head">
       <div>
         <h2 class="modal-title" id="charts-modal-title">Gráficos</h2>
-        <p class="modal-sub">Escolha quais gráficos exibir no dashboard</p>
+        <p class="modal-sub">Escolha quais blocos exibir no dashboard</p>
       </div>
       <button class="modal-close" data-close title="Fechar">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -384,6 +489,18 @@
         <span class="switch"><input type="checkbox" data-chart="trend" checked><span class="slider"></span></span>
       </label>
       <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Comunique vs. Observar</span><span class="setting-desc">Medidor de proporção</span></span>
+        <span class="switch"><input type="checkbox" data-chart="gauge" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Pareto de Tipos</span><span class="setting-desc">Regra 80/20</span></span>
+        <span class="switch"><input type="checkbox" data-chart="pareto" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Mapa de Calor</span><span class="setting-desc">Dia da semana × mês</span></span>
+        <span class="switch"><input type="checkbox" data-chart="heatmap" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
         <span class="setting-info"><span class="setting-name">Tipos de Ocorrência</span><span class="setting-desc">Pizza por categoria</span></span>
         <span class="switch"><input type="checkbox" data-chart="types" checked><span class="slider"></span></span>
       </label>
@@ -394,6 +511,10 @@
       <label class="setting-row">
         <span class="setting-info"><span class="setting-name">Tipo por Departamento</span><span class="setting-desc">Barras empilhadas cruzadas</span></span>
         <span class="switch"><input type="checkbox" data-chart="stacked" checked><span class="slider"></span></span>
+      </label>
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Tabela de Dados</span><span class="setting-desc">Registros com busca e ordenação</span></span>
+        <span class="switch"><input type="checkbox" data-chart="table" checked><span class="slider"></span></span>
       </label>
     </div>
   </div>
@@ -418,6 +539,14 @@
     <div class="modal-body">
 
       <div class="setting-row">
+        <span class="setting-info"><span class="setting-name">Tema</span><span class="setting-desc">Aparência geral do painel</span></span>
+        <div class="seg" id="theme-seg">
+          <button data-theme="dark" class="seg-btn">Escuro</button>
+          <button data-theme="light" class="seg-btn">Claro</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
         <span class="setting-info"><span class="setting-name">Cor de destaque</span><span class="setting-desc">Tema visual do painel</span></span>
         <div class="accent-swatches" id="accent-swatches">
           <button class="swatch" data-accent="blue"   style="--sw:#3b82f6" title="Azul"></button>
@@ -436,6 +565,11 @@
           <option value="0">Todos</option>
         </select>
       </div>
+
+      <label class="setting-row">
+        <span class="setting-info"><span class="setting-name">Paleta para daltônicos</span><span class="setting-desc">Cores acessíveis nos gráficos</span></span>
+        <span class="switch"><input type="checkbox" id="set-colorblind"><span class="slider"></span></span>
+      </label>
 
       <label class="setting-row">
         <span class="setting-info"><span class="setting-name">Animações dos gráficos</span><span class="setting-desc">Efeitos de transição</span></span>
@@ -460,6 +594,6 @@
   </div>
 </div>
 
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
