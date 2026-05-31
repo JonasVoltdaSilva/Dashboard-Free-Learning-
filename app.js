@@ -1,12 +1,12 @@
 'use strict';
 
-// State
+// ─── State ───────────────────────────────────────────────
 let allData = [];
 let cols = { dept: -1, type: -1, obs: -1, date: -1, mode: -1 };
 let charts = {};
 let cachedProcessed = null;
 
-// Column detection
+// ─── Column detection ──────────────────────────────────────
 const KEYWORDS = {
     dept: ['setor', 'departamento', 'area', 'planta', 'unidade', 'local', 'sector', 'dept', 'location'],
     type: ['tipo', 'categoria', 'ocorrencia', 'ocorrência', 'classif', 'classe', 'type', 'category'],
@@ -47,7 +47,7 @@ function detectModeCol(headers, rows) {
     return bestScore > 0 ? bestIdx : -1;
 }
 
-// Date parsing
+// ─── Date parsing ──────────────────────────────────────────
 function parseDate(val) {
     if (val == null || val === '') return null;
     if (typeof val === 'number' && val > 1000) {
@@ -78,7 +78,7 @@ function isoWeek(d) {
     return `S${String(w).padStart(2,'0')}/${y}`;
 }
 
-// Aggregate data
+// ─── Aggregate data ────────────────────────────────────────
 function aggregate(rows) {
     const deptCnt = {}, typeCnt = {}, obsCnt = {}, typeByDept = {};
     const monthKeys = new Set(), sectorSet = new Set();
@@ -116,7 +116,7 @@ function aggregate(rows) {
     };
 }
 
-// Chart defaults
+// ─── Chart defaults ────────────────────────────────────────
 const PALETTE = [
     '#60a5fa','#a855f7','#2dd4bf','#4ade80','#818cf8',
     '#34d399','#93c5fd','#c084fc','#5eead4','#86efac',
@@ -125,6 +125,7 @@ const PALETTE = [
 ];
 const gc = i => PALETTE[i % PALETTE.length];
 
+// Arco-íris para departamento
 const RAINBOW = [
     '#ef4444','#f97316','#eab308','#22c55e','#3b82f6',
     '#6366f1','#a855f7','#ec4899','#06b6d4','#84cc16',
@@ -152,6 +153,7 @@ Chart.defaults.color = '#94a3b8';
 Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.defaults.font.size = 11;
 
+// Plugin: texto central no donut
 Chart.register({
     id: 'doughnutCenter',
     afterDraw(chart) {
@@ -176,7 +178,7 @@ Chart.register({
 
 function destroyChart(key) { if (charts[key]) { charts[key].destroy(); charts[key] = null; } }
 
-// Dept Bar Chart
+// ─── Dept Bar Chart ───────────────────────────────────────
 function buildDeptChart(deptCnt) {
     const sorted = Object.entries(deptCnt).sort((a,b) => b[1]-a[1]).slice(0, 20);
     const labels = sorted.map(([k]) => k.length > 18 ? k.slice(0,18)+'…' : k);
@@ -199,7 +201,7 @@ function buildDeptChart(deptCnt) {
     });
 }
 
-// Types Donut
+// ─── Types Donut ───────────────────────────────────────────
 function buildTypesChart(typeCnt) {
     const sorted = Object.entries(typeCnt).sort((a,b) => b[1]-a[1]);
     const labels = sorted.map(([k]) => k);
@@ -261,7 +263,7 @@ function buildTypesChart(typeCnt) {
     });
 }
 
-// Top Observers (todos, scroll, filtros setor + modo)
+// ─── Top Observers (todos, scroll, filtros setor + modo) ──────────────────
 function buildObsChart(sectorFilter, modeFilter) {
     let rows = allData;
 
@@ -330,7 +332,7 @@ function buildObsChart(sectorFilter, modeFilter) {
     });
 }
 
-// Weekly Bar Chart (filtro setor + mês) — 3 barras: Comunique, Observar, Outros
+// ─── Weekly Bar Chart (filtro setor + mês) ───────────────────────────
 function buildWeeklyChart(sector, month) {
     const canvas = document.getElementById('weekly-chart');
     const empty  = document.getElementById('weekly-empty');
@@ -347,6 +349,7 @@ function buildWeeklyChart(sector, month) {
         rows = rows.filter(r => String(r[cols.dept] ?? '').trim() === sector);
     }
 
+    // Função que define a chave da semana (do mês ou ISO) para cada data
     let weekKeyFn, orderWeeks;
     if (month && cols.date >= 0) {
         rows = rows.filter(r => {
@@ -360,7 +363,8 @@ function buildWeeklyChart(sector, month) {
         orderWeeks = present => [...present].sort();
     }
 
-    const counts = {};
+    // Conta Comunique / Observar / Outros por semana
+    const counts = {};               // semana -> { comunique, observar, outros }
     const present = new Set();
     for (const row of rows) {
         const d = parseDate(cols.date >= 0 ? row[cols.date] : null);
@@ -418,7 +422,7 @@ function buildWeeklyChart(sector, month) {
     });
 }
 
-// Stacked Bar Chart
+// ─── Stacked Bar Chart ───────────────────────────────────────
 function buildStackedChart(typeByDept, typeCnt) {
     const depts = Object.keys(typeByDept)
         .sort((a, b) => {
@@ -467,7 +471,7 @@ function buildStackedChart(typeByDept, typeCnt) {
     });
 }
 
-// KPI counter animation
+// ─── KPI counter animation ─────────────────────────────────────
 function animateValue(el, target) {
     const duration = 600;
     const start = performance.now();
@@ -481,7 +485,7 @@ function animateValue(el, target) {
     requestAnimationFrame(step);
 }
 
-// Render dashboard
+// ─── Render dashboard ────────────────────────────────────────
 function renderDashboard(rows) {
     const d = aggregate(rows);
     cachedProcessed = d;
@@ -495,6 +499,7 @@ function renderDashboard(rows) {
     buildTypesChart(d.typeCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
 
+    // Obs e weekly usam allData diretamente com seus próprios filtros
     const obsSec  = document.getElementById('obs-sector')?.value  || '';
     const obsMode = document.getElementById('obs-mode')?.value    || '';
     buildObsChart(obsSec, obsMode);
@@ -504,7 +509,7 @@ function renderDashboard(rows) {
     buildWeeklyChart(wSec, wMon);
 }
 
-// Init from file
+// ─── Init from file ──────────────────────────────────────────
 function initDashboard(rows, headers) {
     cols.dept = detectCol(headers, KEYWORDS.dept);
     cols.type = detectCol(headers, KEYWORDS.type);
@@ -515,18 +520,21 @@ function initDashboard(rows, headers) {
     allData = rows;
     const initial = aggregate(rows);
 
+    // Filtros globais (topo)
     const fMonth  = document.getElementById('filter-month');
     const fSector = document.getElementById('filter-sector');
     [fMonth, fSector].forEach(el => { while (el.options.length > 1) el.remove(1); });
     initial.months.forEach(m => fMonth.add(new Option(m, m)));
     initial.sectors.forEach(s => fSector.add(new Option(s, s)));
 
+    // Filtros do obs chart
     const obsSec = document.getElementById('obs-sector');
     if (obsSec) {
         while (obsSec.options.length > 1) obsSec.remove(1);
         initial.sectors.forEach(s => obsSec.add(new Option(s, s)));
     }
 
+    // Filtros do weekly
     const wSector = document.getElementById('weekly-sector');
     const wMonth  = document.getElementById('weekly-month');
     if (wSector) { while (wSector.options.length > 1) wSector.remove(1); }
@@ -544,7 +552,7 @@ function initDashboard(rows, headers) {
     document.getElementById('dashboard-screen').classList.remove('hidden');
 }
 
-// Filters
+// ─── Filters ────────────────────────────────────────────
 function applyFilters() {
     const month  = document.getElementById('filter-month').value;
     const sector = document.getElementById('filter-sector').value;
@@ -561,7 +569,7 @@ function applyFilters() {
     renderDashboard(filtered);
 }
 
-// File parsing
+// ─── File parsing ──────────────────────────────────────────
 function handleFile(file) {
     if (!file) return;
     const reader = new FileReader();
@@ -582,7 +590,7 @@ function handleFile(file) {
     reader.readAsArrayBuffer(file);
 }
 
-// Boot
+// ─── Boot ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput    = document.getElementById('file-input');
     const dropZone     = document.getElementById('drop-zone');
@@ -612,17 +620,31 @@ document.addEventListener('DOMContentLoaded', () => {
     fSector.addEventListener('change', applyFilters);
     clearBtn.addEventListener('click', () => { fMonth.value = ''; fSector.value = ''; renderDashboard(allData); });
 
+    // Filtros do Top Observadores
     document.getElementById('obs-sector')?.addEventListener('change', () => {
-        buildObsChart(document.getElementById('obs-sector').value, document.getElementById('obs-mode').value);
+        buildObsChart(
+            document.getElementById('obs-sector').value,
+            document.getElementById('obs-mode').value
+        );
     });
     document.getElementById('obs-mode')?.addEventListener('change', () => {
-        buildObsChart(document.getElementById('obs-sector').value, document.getElementById('obs-mode').value);
+        buildObsChart(
+            document.getElementById('obs-sector').value,
+            document.getElementById('obs-mode').value
+        );
     });
 
+    // Filtros do gráfico semanal
     document.getElementById('weekly-sector')?.addEventListener('change', () => {
-        buildWeeklyChart(document.getElementById('weekly-sector').value, document.getElementById('weekly-month').value);
+        buildWeeklyChart(
+            document.getElementById('weekly-sector').value,
+            document.getElementById('weekly-month').value
+        );
     });
     document.getElementById('weekly-month')?.addEventListener('change', () => {
-        buildWeeklyChart(document.getElementById('weekly-sector').value, document.getElementById('weekly-month').value);
+        buildWeeklyChart(
+            document.getElementById('weekly-sector').value,
+            document.getElementById('weekly-month').value
+        );
     });
 });
