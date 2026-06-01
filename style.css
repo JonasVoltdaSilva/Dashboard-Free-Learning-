@@ -731,7 +731,8 @@ html, body {
 /* Obs scrollable */
 .obs-scroll-wrap {
     height: 384px;
-    flex-shrink: 0;
+    max-height: 384px;
+    flex: none;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
