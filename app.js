@@ -306,8 +306,9 @@ function buildObsChart(sectorFilter, modeFilter) {
 
     const all    = Object.entries(obsCnt).sort((a,b) => b[1]-a[1]);
     const total  = all.length;
-    const TOP    = 10;
-    const sorted = all.slice(0, TOP);
+    const BAR_ROW = 38;
+    const VISIBLE = 10;
+    const sorted = all; // render ALL, scroll shows first 10
     const labels = sorted.map(([k]) => k.length > 30 ? k.slice(0,30)+'…' : k);
     const data   = sorted.map(([,v]) => v);
     const colors = data.map((_,i) => gc(i));
@@ -317,10 +318,10 @@ function buildObsChart(sectorFilter, modeFilter) {
     const wrap   = document.getElementById('obs-chart-wrap');
     const inner  = document.getElementById('obs-chart-inner');
 
-    // update subtitle to show total count when more exist
+    // update subtitle
     const sub = document.querySelector('#card-obs .chart-subtitle');
-    if (sub) sub.textContent = total > TOP
-        ? `Top ${TOP} de ${total} observadores`
+    if (sub) sub.textContent = total > VISIBLE
+        ? `Top ${VISIBLE} visíveis de ${total} — role para ver mais`
         : `${total} observador${total !== 1 ? 'es' : ''}`;
 
     if (sorted.length === 0) {
@@ -336,19 +337,24 @@ function buildObsChart(sectorFilter, modeFilter) {
     }
     wrap.querySelector('.obs-empty')?.remove();
 
-    // size canvas to exact bar count — no scroll needed
-    const BAR_ROW = 38;
-    const chartH = sorted.length * BAR_ROW + 24;
+    // canvas fills inner at full height; wrap clips to VISIBLE rows and scrolls
+    const canvasH = sorted.length * BAR_ROW + 24;
+    const wrapH   = Math.min(sorted.length, VISIBLE) * BAR_ROW + 24;
     inner.style.display = 'block';
-    inner.style.height = chartH + 'px';
-    wrap.style.height = chartH + 'px';
+    inner.style.height = canvasH + 'px';
+    wrap.style.height = wrapH + 'px';
+
+    // responsive:false + explicit dimensions avoids Chart.js measuring the scroll wrapper
+    const canvasW = inner.offsetWidth || wrap.offsetWidth || 800;
+    canvas.style.width  = canvasW + 'px';
+    canvas.style.height = canvasH + 'px';
 
     charts.obs = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 5,
                                      borderSkipped: 'left', maxBarThickness: BAR_ROW - 10 }] },
         options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: anim(),
+            indexAxis: 'y', responsive: false, maintainAspectRatio: false, animation: anim(),
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
