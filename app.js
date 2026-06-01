@@ -5,7 +5,6 @@ let allData = [];
 let allHeaders = [];
 let cols = { dept: -1, type: -1, obs: -1, date: -1, mode: -1 };
 let charts = {};
-let sparks = {};
 let cachedProcessed = null;
 let lastRows = [];
 let tableSort = { col: -1, dir: 1 };
@@ -254,23 +253,6 @@ function renderKpi(id, value, series, color) {
         } else { deltaEl.textContent = ''; deltaEl.className = 'kpi-delta'; }
     } else { deltaEl.textContent = ''; deltaEl.className = 'kpi-delta'; }
 
-    // sparkline
-    if (sparks[id]) { sparks[id].destroy(); sparks[id] = null; }
-    const el = document.getElementById('spark-' + id);
-    if (!el || !series || series.length < 2) return;
-    sparks[id] = new Chart(el.getContext('2d'), {
-        type: 'line',
-        data: { labels: series.map((_, i) => i), datasets: [{
-            data: series, borderColor: 'rgba(255,255,255,0.9)',
-            backgroundColor: 'rgba(255,255,255,0.18)', fill: true,
-            tension: 0.4, borderWidth: 1.5, pointRadius: 0,
-        }]},
-        options: {
-            responsive: true, maintainAspectRatio: false, animation: anim(),
-            plugins: { legend: { display: false }, tooltip: { enabled: false } },
-            scales: { x: { display: false }, y: { display: false } },
-        },
-    });
 }
 
 // ─── Dept Bar Chart (com drill-down por clique) ───────────────────────────────

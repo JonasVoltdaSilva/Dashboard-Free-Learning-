@@ -977,9 +977,6 @@ body.high-contrast .setting-desc { color: rgba(203,213,225,0.85); }
 .kpi-delta--up   { background: rgba(254,202,202,0.22); color: #fecaca; }
 .kpi-delta--down { background: rgba(187,247,208,0.22); color: #bbf7d0; }
 
-.kpi-spark { height: 34px; margin-top: 0.5rem; }
-.kpi-spark canvas { display: block; }
-
 /* ═══════════════════════════════════════════════ EXPORT */
 .export-wrap { position: relative; }
 .btn-export {
