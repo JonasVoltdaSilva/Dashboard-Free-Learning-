@@ -341,20 +341,22 @@ function buildObsChart(sectorFilter, modeFilter) {
     const canvasH = sorted.length * BAR_ROW + 24;
     const wrapH   = Math.min(sorted.length, VISIBLE) * BAR_ROW + 24;
     inner.style.display = 'block';
-    inner.style.height = canvasH + 'px';
-    wrap.style.height = wrapH + 'px';
+    inner.style.height  = canvasH + 'px';
+    wrap.style.height   = wrapH + 'px';
 
-    // responsive:false + explicit dimensions avoids Chart.js measuring the scroll wrapper
-    const canvasW = inner.offsetWidth || wrap.offsetWidth || 800;
-    canvas.style.width  = canvasW + 'px';
-    canvas.style.height = canvasH + 'px';
+    // clear any leftover inline size so Chart.js measures fresh
+    canvas.style.width = '';
+    canvas.style.height = '';
+
+    // force reflow so Chart.js sees obs-chart-inner's correct height, not the scroll wrapper's
+    void inner.offsetHeight;
 
     charts.obs = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 5,
                                      borderSkipped: 'left', maxBarThickness: BAR_ROW - 10 }] },
         options: {
-            indexAxis: 'y', responsive: false, maintainAspectRatio: false, animation: anim(),
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: anim(),
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
