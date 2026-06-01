@@ -725,7 +725,7 @@ html, body {
 /* Fixed heights — flex-shrink: 0 prevents flex from collapsing these */
 #dept-chart-wrap    { height: 320px;  min-height: 320px; flex-shrink: 0; }
 #types-chart-wrap   { height: 720px;  flex-shrink: 0; }
-#stacked-chart-wrap { height: 174px;  flex-shrink: 0; }
+#stacked-chart-wrap { height: 260px; min-height: 260px; flex-shrink: 0; }
 #weekly-chart-wrap  { height: 320px;  min-height: 320px; flex-shrink: 0; }
 
 /* Obs scrollable */
@@ -961,21 +961,8 @@ body.high-contrast .modal { background: rgba(13,15,30,0.98); }
 body.high-contrast .chart-subtitle,
 body.high-contrast .setting-desc { color: rgba(203,213,225,0.85); }
 
-/* ═══════════════════════════════════════════════ KPI — delta + sparkline */
+/* ═══════════════════════════════════════════════ KPI card top */
 .kpi-card-top { display: flex; align-items: flex-start; justify-content: space-between; }
-.kpi-delta {
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 0.18rem 0.5rem;
-    border-radius: 50px;
-    background: rgba(0,0,0,0.22);
-    color: #fff;
-    line-height: 1;
-    white-space: nowrap;
-}
-.kpi-delta:empty { display: none; }
-.kpi-delta--up   { background: rgba(254,202,202,0.22); color: #fecaca; }
-.kpi-delta--down { background: rgba(187,247,208,0.22); color: #bbf7d0; }
 
 /* ═══════════════════════════════════════════════ EXPORT */
 .export-wrap { position: relative; }

@@ -236,23 +236,8 @@ Chart.register({
 function destroyChart(key) { if (charts[key]) { charts[key].destroy(); charts[key] = null; } }
 
 // ─── KPIs inteligentes (delta + sparkline) ────────────────────────────────────
-function renderKpi(id, value, series, color) {
+function renderKpi(id, value) {
     animateValue(document.getElementById('kpi-' + id), value);
-
-    // delta vs mês anterior (últimos 2 meses da série)
-    const deltaEl = document.getElementById('d-' + id);
-    if (series && series.length >= 2) {
-        const cur = series[series.length - 1];
-        const prev = series[series.length - 2];
-        if (prev > 0 || cur > 0) {
-            const pct = prev === 0 ? 100 : Math.round((cur - prev) / prev * 100);
-            const up = cur >= prev;
-            deltaEl.className = 'kpi-delta ' + (up ? 'kpi-delta--up' : 'kpi-delta--down');
-            deltaEl.innerHTML = `${up ? '▲' : '▼'} ${Math.abs(pct)}%`;
-            deltaEl.title = `${prev.toLocaleString('pt-BR')} → ${cur.toLocaleString('pt-BR')} (vs. mês anterior)`;
-        } else { deltaEl.textContent = ''; deltaEl.className = 'kpi-delta'; }
-    } else { deltaEl.textContent = ''; deltaEl.className = 'kpi-delta'; }
-
 }
 
 // ─── Dept Bar Chart (com drill-down por clique) ───────────────────────────────
@@ -512,10 +497,10 @@ function renderDashboard(rows) {
     const d = aggregate(rows);
     cachedProcessed = d;
 
-    renderKpi('total', d.total,      d.series.total);
-    renderKpi('depts', d.totalDepts, d.series.depts);
-    renderKpi('obs',   d.totalObs,   d.series.obs);
-    renderKpi('types', d.totalTypes, d.series.types);
+    renderKpi('total', d.total);
+    renderKpi('depts', d.totalDepts);
+    renderKpi('obs',   d.totalObs);
+    renderKpi('types', d.totalTypes);
 
     buildDeptChart(d.deptCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
