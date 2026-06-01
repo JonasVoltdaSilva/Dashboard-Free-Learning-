@@ -304,7 +304,10 @@ function buildObsChart(sectorFilter, modeFilter) {
     for (const row of rows) { const obs = cols.obs >= 0 ? String(row[cols.obs] ?? '').trim() : ''; if (obs) rawCnt[obs] = (rawCnt[obs] || 0) + 1; }
     const obsCnt = mergePartialNames(rawCnt);
 
-    const sorted = Object.entries(obsCnt).sort((a,b) => b[1]-a[1]);
+    const all    = Object.entries(obsCnt).sort((a,b) => b[1]-a[1]);
+    const total  = all.length;
+    const TOP    = 10;
+    const sorted = all.slice(0, TOP);
     const labels = sorted.map(([k]) => k.length > 30 ? k.slice(0,30)+'…' : k);
     const data   = sorted.map(([,v]) => v);
     const colors = data.map((_,i) => gc(i));
@@ -313,6 +316,12 @@ function buildObsChart(sectorFilter, modeFilter) {
     const canvas = document.getElementById('obs-chart');
     const wrap   = document.getElementById('obs-chart-wrap');
     const inner  = document.getElementById('obs-chart-inner');
+
+    // update subtitle to show total count when more exist
+    const sub = document.querySelector('#card-obs .chart-subtitle');
+    if (sub) sub.textContent = total > TOP
+        ? `Top ${TOP} de ${total} observadores`
+        : `${total} observador${total !== 1 ? 'es' : ''}`;
 
     if (sorted.length === 0) {
         inner.style.display = 'none';
@@ -326,12 +335,18 @@ function buildObsChart(sectorFilter, modeFilter) {
         return;
     }
     wrap.querySelector('.obs-empty')?.remove();
+
+    // size canvas to exact bar count — no scroll needed
+    const BAR_ROW = 38;
+    const chartH = sorted.length * BAR_ROW + 24;
     inner.style.display = 'block';
-    inner.style.height = Math.max(sorted.length * 36 + 24, 80) + 'px';
+    inner.style.height = chartH + 'px';
+    wrap.style.height = chartH + 'px';
 
     charts.obs = new Chart(canvas.getContext('2d'), {
         type: 'bar',
-        data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 5, borderSkipped: 'left' }] },
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 5,
+                                     borderSkipped: 'left', maxBarThickness: BAR_ROW - 10 }] },
         options: {
             indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: anim(),
             plugins: { legend: { display: false }, tooltip: { ...TOOLTIP_OPTS } },
