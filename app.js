@@ -18,7 +18,7 @@ const ACCENTS = {
     amber:  { main: '#f59e0b', soft: 'rgba(245,158,11,0.22)', glow: 'rgba(245,158,11,0.25)' },
 };
 const DEFAULT_SETTINGS = { theme: 'dark', accent: 'blue', topN: 20, colorblind: false, animations: true, compact: false, contrast: false };
-const DEFAULT_VISIBLE  = { dept: true, weekly: true, trend: true, gauge: true, pareto: true, heatmap: true, types: true, obs: true, stacked: true, table: true };
+const DEFAULT_VISIBLE  = { dept: true, weekly: true, obs: true, stacked: true, table: true };
 
 let SETTINGS = { ...DEFAULT_SETTINGS };
 let VISIBLE  = { ...DEFAULT_VISIBLE };
@@ -65,8 +65,9 @@ const gcRainbow = i => rainbow()[i % rainbow().length];
 const KEYWORDS = {
     dept: ['setor', 'departamento', 'area', 'planta', 'unidade', 'local', 'sector', 'dept', 'location'],
     type: ['tipo', 'categoria', 'ocorrencia', 'ocorrência', 'classif', 'classe', 'type', 'category'],
-    obs:  ['observador', 'responsavel', 'responsável', 'nome', 'funcionario', 'funcionário', 'autor',
-           'registrado', 'reporter', 'observer', 'colaborador', 'registrant'],
+    obs:  ['observou', 'quem observou', 'observador', 'responsavel', 'responsável', 'nome',
+           'funcionario', 'funcionário', 'autor', 'registrado', 'reporter', 'observer',
+           'colaborador', 'registrant', 'quem'],
     date: ['data', 'date', 'mes', 'mês', 'periodo', 'período', 'dt_', 'datahora'],
 };
 
@@ -86,13 +87,16 @@ function detectCol(headers, keywords) {
     return -1;
 }
 
+const isModeObservar  = v => v.startsWith('observ');
+const isModeComunique = v => v.startsWith('comuniq') || v.startsWith('comunic');
+
 function detectModeCol(headers, rows) {
     let bestIdx = -1, bestScore = 0;
     for (let i = 0; i < headers.length; i++) {
         let matches = 0;
         for (const r of rows) {
             const v = normalizeStr(String(r[i] ?? ''));
-            if (v === 'observar' || v === 'comunique') matches++;
+            if (isModeObservar(v) || isModeComunique(v)) matches++;
         }
         if (matches > bestScore) { bestScore = matches; bestIdx = i; }
     }
@@ -167,8 +171,8 @@ function aggregate(rows) {
 
         if (cols.mode >= 0) {
             const md = normalizeStr(String(row[cols.mode] ?? ''));
-            if (md === 'comunique') comunique++;
-            else if (md === 'observar') observar++;
+            if (isModeComunique(md)) comunique++;
+            else if (isModeObservar(md)) observar++;
             else outros++;
         }
     }
@@ -295,208 +299,43 @@ function buildDeptChart(deptCnt) {
     });
 }
 
-// ─── Types Donut ──────────────────────────────────────────────────────────────
-function buildTypesChart(typeCnt) {
-    const sorted = Object.entries(typeCnt).sort((a,b) => b[1]-a[1]);
-    const labels = sorted.map(([k]) => k);
-    const data   = sorted.map(([,v]) => v);
-    const colors = labels.map((_,i) => gc(i));
-    const total  = data.reduce((a,b) => a+b, 0);
+// ─── Top Observers ────────────────────────────────────────────────────────────
 
-    destroyChart('types');
-    const ctx = document.getElementById('types-chart').getContext('2d');
-    charts.types = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels, datasets: [{
-            data, backgroundColor: colors, borderColor: 'rgba(255,255,255,0.15)',
-            borderWidth: 2, hoverOffset: 12, spacing: 3, borderRadius: 6,
-        }]},
-        options: {
-            responsive: true, maintainAspectRatio: false, cutout: '68%', animation: anim(),
-            plugins: {
-                doughnutCenter: true,
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#e2e8f0', padding: 16, font: { size: 11, weight: '500' },
-                        usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8,
-                        generateLabels: chart => chart.data.labels.map((label, i) => {
-                            const val = chart.data.datasets[0].data[i];
-                            const pct = total > 0 ? Math.round(val / total * 100) : 0;
-                            const short = label.length > 20 ? label.slice(0,20)+'…' : label;
-                            return {
-                                text: `${short}  ${pct}%`,
-                                fillStyle: chart.data.datasets[0].backgroundColor[i],
-                                strokeStyle: chart.data.datasets[0].backgroundColor[i],
-                                fontColor: '#e2e8f0', color: '#e2e8f0',
-                                pointStyle: 'circle', lineWidth: 0, hidden: false, index: i,
-                            };
-                        }),
-                    },
-                },
-                tooltip: {
-                    ...TOOLTIP_OPTS,
-                    callbacks: { label: c => {
-                        const pct = total > 0 ? Math.round(c.parsed / total * 100) : 0;
-                        return ` ${c.label}: ${c.parsed.toLocaleString('pt-BR')} (${pct}%)`;
-                    }},
-                },
-            },
-        },
-    });
-}
-
-// ─── Trend Line Chart ─────────────────────────────────────────────────────────
-function buildTrendChart(months, monthCnt) {
-    const empty  = document.getElementById('trend-empty');
-    const canvas = document.getElementById('trend-chart');
-    destroyChart('trend');
-    if (!months || months.length === 0) { canvas.style.display = 'none'; empty.style.display = 'flex'; return; }
-    canvas.style.display = 'block'; empty.style.display = 'none';
-
-    const data = months.map(m => monthCnt[m] || 0);
-    const accent = ACCENTS[SETTINGS.accent]?.main || '#3b82f6';
-    const ctx = canvas.getContext('2d');
-    charts.trend = new Chart(ctx, {
-        type: 'line',
-        data: { labels: months, datasets: [{
-            label: 'Ocorrências', data, borderColor: accent,
-            backgroundColor: c => {
-                const { chartArea, ctx: cc } = c.chart;
-                if (!chartArea) return accent + '20';
-                const g = cc.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                g.addColorStop(0, accent + '55'); g.addColorStop(1, accent + '05');
-                return g;
-            },
-            fill: true, tension: 0.35, borderWidth: 2.5,
-            pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: accent,
-            pointBorderColor: '#0b0b1f', pointBorderWidth: 2,
-        }]},
-        options: {
-            responsive: true, maintainAspectRatio: false, animation: anim(),
-            plugins: { legend: { display: false },
-                tooltip: { ...TOOLTIP_OPTS, callbacks: { label: c => ` ${c.parsed.y.toLocaleString('pt-BR')} ocorrências` } } },
-            scales: { x: { ...SCALE_OPTS.x }, y: { ...SCALE_OPTS.y } },
-        },
-    });
-}
-
-// ─── Gauge: Comunique vs Observar (meia-rosca) ────────────────────────────────
-function buildGaugeChart(modes) {
-    const empty  = document.getElementById('gauge-empty');
-    const canvas = document.getElementById('gauge-chart');
-    const center = document.getElementById('gauge-center');
-    const legend = document.getElementById('gauge-legend');
-    destroyChart('gauge');
-
-    if (cols.mode < 0 || (modes.comunique + modes.observar + modes.outros) === 0) {
-        canvas.style.display = 'none'; center.textContent = ''; legend.innerHTML = '';
-        empty.style.display = 'flex'; return;
-    }
-    canvas.style.display = 'block'; empty.style.display = 'none';
-
-    const c = modes.comunique, o = modes.observar, ot = modes.outros;
-    const tot = c + o + ot;
-    const pctC = Math.round(c / tot * 100);
-    const cor = SETTINGS.colorblind ? ['#0072b2','#e69f00','#999999'] : ['#3b82f6','#10b981','#f59e0b'];
-
-    charts.gauge = new Chart(canvas.getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: ['Comunique','Observar','Outros'], datasets: [{
-            data: [c, o, ot], backgroundColor: cor, borderColor: 'transparent',
-            borderRadius: 4, spacing: 2,
-        }]},
-        options: {
-            responsive: true, maintainAspectRatio: false, animation: anim(),
-            rotation: -90, circumference: 180, cutout: '70%',
-            plugins: { legend: { display: false },
-                tooltip: { ...TOOLTIP_OPTS, callbacks: { label: x => ` ${x.label}: ${x.parsed.toLocaleString('pt-BR')} (${Math.round(x.parsed/tot*100)}%)` } } },
-        },
-    });
-    center.innerHTML = `<span class="gauge-big">${pctC}%</span><span class="gauge-sub">Comunique</span>`;
-    legend.innerHTML = ['Comunique','Observar','Outros'].map((l,i) =>
-        `<span class="gl"><i style="background:${cor[i]}"></i>${l} · ${[c,o,ot][i].toLocaleString('pt-BR')}</span>`).join('');
-}
-
-// ─── Pareto: barras + linha cumulativa ────────────────────────────────────────
-function buildParetoChart(typeCnt) {
-    const sorted = Object.entries(typeCnt).sort((a,b) => b[1]-a[1]).slice(0, 12);
-    const labels = sorted.map(([k]) => k.length > 14 ? k.slice(0,14)+'…' : k);
-    const data   = sorted.map(([,v]) => v);
-    const total  = data.reduce((a,b) => a+b, 0) || 1;
-    let acc = 0;
-    const cum = data.map(v => { acc += v; return Math.round(acc / total * 100); });
-    const accent = ACCENTS[SETTINGS.accent]?.main || '#3b82f6';
-
-    destroyChart('pareto');
-    charts.pareto = new Chart(document.getElementById('pareto-chart').getContext('2d'), {
-        data: {
-            labels,
-            datasets: [
-                { type: 'bar', label: 'Ocorrências', data, backgroundColor: data.map((_,i)=>gc(i)),
-                  borderRadius: 5, borderSkipped: false, yAxisID: 'y', order: 2 },
-                { type: 'line', label: '% acumulado', data: cum, borderColor: accent,
-                  backgroundColor: accent, tension: 0.3, borderWidth: 2.5, pointRadius: 3,
-                  pointBackgroundColor: accent, yAxisID: 'y1', order: 1 },
-            ],
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, animation: anim(),
-            plugins: {
-                legend: { position: 'top', labels: { color: '#cbd5e1', font: { size: 10 }, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 12 } },
-                tooltip: { ...TOOLTIP_OPTS, callbacks: { label: c => c.dataset.yAxisID === 'y1' ? ` ${c.parsed.y}% acumulado` : ` ${c.parsed.y.toLocaleString('pt-BR')} ocorrências` } },
-            },
-            scales: {
-                x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxRotation: 40 } },
-                y: { ...SCALE_OPTS.y, position: 'left' },
-                y1: { position: 'right', beginAtZero: true, max: 100,
-                      ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => v + '%' },
-                      grid: { drawOnChartArea: false } },
-            },
-        },
-    });
-}
-
-// ─── Mapa de calor (HTML/CSS) ─────────────────────────────────────────────────
-function buildHeatmap(months, heat) {
-    const wrap  = document.getElementById('heatmap');
-    const empty = document.getElementById('heatmap-empty');
-    if (!months || months.length === 0) { wrap.style.display = 'none'; empty.style.display = 'flex'; return; }
-    wrap.style.display = 'grid'; empty.style.display = 'none';
-
-    // máximo p/ normalizar intensidade
-    let max = 0;
-    for (let wd = 0; wd < 7; wd++) for (const m of months) max = Math.max(max, heat[wd]?.[m] || 0);
-    max = max || 1;
-    const accent = ACCENTS[SETTINGS.accent]?.main || '#3b82f6';
-
-    wrap.style.gridTemplateColumns = `48px repeat(${months.length}, 1fr)`;
-    let html = '<div class="hm-corner"></div>';
-    for (const m of months) html += `<div class="hm-colh">${m}</div>`;
-    for (let wd = 1; wd <= 7; wd++) {           // começa na Segunda
-        const d = wd % 7;                        // 1..6,0
-        html += `<div class="hm-rowh">${WEEKDAYS[d]}</div>`;
-        for (const m of months) {
-            const v = heat[d]?.[m] || 0;
-            const a = v === 0 ? 0 : 0.12 + 0.88 * (v / max);
-            html += `<div class="hm-cell" style="background:${hexA(accent, a)}" title="${WEEKDAYS[d]} · ${m}: ${v}">${v > 0 ? v : ''}</div>`;
+function mergePartialNames(cnt) {
+    const norm = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
+    const isPrefix = (short, long) => short.length >= 3 && (long === short || long.startsWith(short + ' '));
+    const entries = Object.entries(cnt).sort((a, b) => norm(b[0]).length - norm(a[0]).length);
+    const canonicals = [];
+    for (const [name, count] of entries) {
+        const n = norm(name);
+        const match = canonicals.find(c => isPrefix(n, c.norm) || isPrefix(c.norm, n));
+        if (match) {
+            match.count += count;
+            if (n.length > match.norm.length) { match.name = name; match.norm = n; }
+        } else {
+            canonicals.push({ norm: n, name, count });
         }
     }
-    wrap.innerHTML = html;
+    const result = {};
+    for (const c of canonicals) result[c.name] = c.count;
+    return result;
 }
-function hexA(hex, a) {
-    const n = parseInt(hex.slice(1), 16);
-    return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a.toFixed(3)})`;
-}
-
-// ─── Top Observers ────────────────────────────────────────────────────────────
 function buildObsChart(sectorFilter, modeFilter) {
     let rows = lastRows.length ? lastRows : allData;
     if (sectorFilter && cols.dept >= 0) rows = rows.filter(r => String(r[cols.dept] ?? '').trim() === sectorFilter);
-    if (modeFilter && cols.mode >= 0) { const mf = normalizeStr(modeFilter); rows = rows.filter(r => normalizeStr(String(r[cols.mode] ?? '')) === mf); }
+    if (modeFilter && cols.mode >= 0) {
+        const mf = normalizeStr(modeFilter);
+        rows = rows.filter(r => {
+            const v = normalizeStr(String(r[cols.mode] ?? ''));
+            if (isModeComunique(mf)) return isModeComunique(v);
+            if (isModeObservar(mf))  return isModeObservar(v);
+            return false;
+        });
+    }
 
-    const obsCnt = {};
-    for (const row of rows) { const obs = cols.obs >= 0 ? String(row[cols.obs] ?? '').trim() : ''; if (obs) obsCnt[obs] = (obsCnt[obs] || 0) + 1; }
+    const rawCnt = {};
+    for (const row of rows) { const obs = cols.obs >= 0 ? String(row[cols.obs] ?? '').trim() : ''; if (obs) rawCnt[obs] = (rawCnt[obs] || 0) + 1; }
+    const obsCnt = mergePartialNames(rawCnt);
 
     const sorted = Object.entries(obsCnt).sort((a,b) => b[1]-a[1]);
     const labels = sorted.map(([k]) => k.length > 30 ? k.slice(0,30)+'…' : k);
@@ -564,8 +403,8 @@ function buildWeeklyChart(sector, month) {
         const wk = weekKeyFn(d); present.add(wk);
         if (!counts[wk]) counts[wk] = { comunique: 0, observar: 0, outros: 0 };
         const mode = cols.mode >= 0 ? normalizeStr(String(row[cols.mode] ?? '')) : '';
-        if (mode === 'comunique') counts[wk].comunique++;
-        else if (mode === 'observar') counts[wk].observar++;
+        if (isModeComunique(mode)) counts[wk].comunique++;
+        else if (isModeObservar(mode)) counts[wk].observar++;
         else counts[wk].outros++;
     }
 
@@ -697,12 +536,7 @@ function renderDashboard(rows) {
     renderKpi('types', d.totalTypes, d.series.types);
 
     buildDeptChart(d.deptCnt);
-    buildTypesChart(d.typeCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
-    buildTrendChart(d.months, d.monthCnt);
-    buildGaugeChart(d.modes);
-    buildParetoChart(d.typeCnt);
-    buildHeatmap(d.months, d.heat);
     buildTable(rows);
 
     const obsSec  = document.getElementById('obs-sector')?.value  || '';
@@ -849,29 +683,12 @@ async function exportImage(asPdf) {
 }
 
 // ─── Visibilidade de blocos (painel Gráficos) ─────────────────────────────────
-const CARD_OF = { dept:'card-dept', weekly:'card-weekly', trend:'card-trend', gauge:'card-gauge', pareto:'card-pareto', heatmap:'card-heatmap', types:'card-types', obs:'card-obs', stacked:'card-stacked', table:'card-table' };
-const ROW_FULL = { dept:'row-dept', weekly:'row-weekly', trend:'row-trend', heatmap:'row-heatmap', stacked:'row-stacked', table:'row-table' };
+const CARD_OF = { dept:'card-dept', weekly:'card-weekly', obs:'card-obs', stacked:'card-stacked', table:'card-table' };
+const ROW_FULL = { dept:'row-dept', weekly:'row-weekly', obs:'row-obs', stacked:'row-stacked', table:'row-table' };
 
 function applyChartVisibility() {
     for (const key in CARD_OF) { const c = document.getElementById(CARD_OF[key]); if (c) c.style.display = VISIBLE[key] ? '' : 'none'; }
     for (const key in ROW_FULL) { const r = document.getElementById(ROW_FULL[key]); if (r) r.style.display = VISIBLE[key] ? '' : 'none'; }
-
-    // linha medidor + pareto
-    const gp = document.getElementById('row-gauge-pareto');
-    if (gp) {
-        const both = VISIBLE.gauge && VISIBLE.pareto, any = VISIBLE.gauge || VISIBLE.pareto;
-        gp.style.display = any ? '' : 'none';
-        gp.classList.toggle('chart-row--gauge-pareto', both);
-        gp.classList.toggle('chart-row--full', !both);
-    }
-    // linha donut + obs
-    const dobs = document.getElementById('row-donut-obs');
-    if (dobs) {
-        const both = VISIBLE.types && VISIBLE.obs, any = VISIBLE.types || VISIBLE.obs;
-        dobs.style.display = any ? '' : 'none';
-        dobs.classList.toggle('chart-row--donut-obs', both);
-        dobs.classList.toggle('chart-row--full', !both);
-    }
     document.querySelectorAll('#charts-toggle-list input[data-chart]').forEach(cb => { cb.checked = !!VISIBLE[cb.dataset.chart]; });
 }
 

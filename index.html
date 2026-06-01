@@ -10,7 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 
@@ -309,89 +309,8 @@
         </div>
       </div>
 
-      <!-- Row: Tendência Mensal (full width) -->
-      <div class="chart-row chart-row--full" id="row-trend">
-        <div class="chart-card" id="card-trend">
-          <div class="chart-head">
-            <div class="chart-head-left">
-              <div class="chart-title">Tendência Mensal de Ocorrências</div>
-              <div class="chart-subtitle">Evolução do total de registros ao longo dos meses</div>
-            </div>
-            <span class="badge badge--indigo">LINHA</span>
-          </div>
-          <div class="chart-body" id="trend-chart-wrap">
-            <canvas id="trend-chart"></canvas>
-            <div class="weekly-empty" id="trend-empty" style="display:none">
-              Nenhuma coluna de data detectada na planilha
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row: Medidor + Pareto -->
-      <div class="chart-row chart-row--gauge-pareto" id="row-gauge-pareto">
-        <div class="chart-card" id="card-gauge">
-          <div class="chart-head">
-            <div class="chart-head-left">
-              <div class="chart-title">Comunique vs. Observar</div>
-              <div class="chart-subtitle">Proporção entre os modos de registro</div>
-            </div>
-            <span class="badge badge--teal">MEDIDOR</span>
-          </div>
-          <div class="chart-body" id="gauge-chart-wrap">
-            <canvas id="gauge-chart"></canvas>
-            <div class="gauge-center" id="gauge-center"></div>
-            <div class="weekly-empty" id="gauge-empty" style="display:none">
-              Coluna Comunique/Observar não detectada
-            </div>
-          </div>
-          <div class="gauge-legend" id="gauge-legend"></div>
-        </div>
-
-        <div class="chart-card" id="card-pareto">
-          <div class="chart-head">
-            <div class="chart-head-left">
-              <div class="chart-title">Pareto de Tipos de Ocorrência</div>
-              <div class="chart-subtitle">Os tipos que mais impactam (regra 80/20)</div>
-            </div>
-            <span class="badge badge--orange">PARETO</span>
-          </div>
-          <div class="chart-body" id="pareto-chart-wrap"><canvas id="pareto-chart"></canvas></div>
-        </div>
-      </div>
-
-      <!-- Row: Mapa de calor (full width) -->
-      <div class="chart-row chart-row--full" id="row-heatmap">
-        <div class="chart-card" id="card-heatmap">
-          <div class="chart-head">
-            <div class="chart-head-left">
-              <div class="chart-title">Mapa de Calor — Dia da Semana × Mês</div>
-              <div class="chart-subtitle">Identifique quando as ocorrências se concentram</div>
-            </div>
-            <span class="badge badge--blue">CALOR</span>
-          </div>
-          <div class="chart-body chart-body--auto" id="heatmap-wrap">
-            <div class="heatmap" id="heatmap"></div>
-            <div class="weekly-empty" id="heatmap-empty" style="display:none">
-              Nenhuma coluna de data detectada na planilha
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row: Donut + Top Observadores -->
-      <div class="chart-row chart-row--donut-obs" id="row-donut-obs">
-        <div class="chart-card" id="card-types">
-          <div class="chart-head">
-            <div class="chart-head-left">
-              <div class="chart-title">Tipos de Ocorrência</div>
-              <div class="chart-subtitle">Proporção por categoria</div>
-            </div>
-            <span class="badge badge--indigo">PIZZA</span>
-          </div>
-          <div class="chart-body" id="types-chart-wrap"><canvas id="types-chart"></canvas></div>
-        </div>
-
+      <!-- Row: Top Observadores (full width) -->
+      <div class="chart-row chart-row--full" id="row-obs">
         <div class="chart-card" id="card-obs">
           <div class="chart-head">
             <div class="chart-head-left">
@@ -485,27 +404,7 @@
         <span class="switch"><input type="checkbox" data-chart="weekly" checked><span class="slider"></span></span>
       </label>
       <label class="setting-row">
-        <span class="setting-info"><span class="setting-name">Tendência Mensal</span><span class="setting-desc">Linha de evolução no tempo</span></span>
-        <span class="switch"><input type="checkbox" data-chart="trend" checked><span class="slider"></span></span>
-      </label>
-      <label class="setting-row">
-        <span class="setting-info"><span class="setting-name">Comunique vs. Observar</span><span class="setting-desc">Medidor de proporção</span></span>
-        <span class="switch"><input type="checkbox" data-chart="gauge" checked><span class="slider"></span></span>
-      </label>
-      <label class="setting-row">
-        <span class="setting-info"><span class="setting-name">Pareto de Tipos</span><span class="setting-desc">Regra 80/20</span></span>
-        <span class="switch"><input type="checkbox" data-chart="pareto" checked><span class="slider"></span></span>
-      </label>
-      <label class="setting-row">
-        <span class="setting-info"><span class="setting-name">Mapa de Calor</span><span class="setting-desc">Dia da semana × mês</span></span>
-        <span class="switch"><input type="checkbox" data-chart="heatmap" checked><span class="slider"></span></span>
-      </label>
-      <label class="setting-row">
-        <span class="setting-info"><span class="setting-name">Tipos de Ocorrência</span><span class="setting-desc">Pizza por categoria</span></span>
-        <span class="switch"><input type="checkbox" data-chart="types" checked><span class="slider"></span></span>
-      </label>
-      <label class="setting-row">
-        <span class="setting-info"><span class="setting-name">Top Observadores</span><span class="setting-desc">Ranking de observadores</span></span>
+        <span class="setting-info"><span class="setting-name">Top Observadores</span><span class="setting-desc">Ranking de quem observou</span></span>
         <span class="switch"><input type="checkbox" data-chart="obs" checked><span class="slider"></span></span>
       </label>
       <label class="setting-row">
@@ -594,6 +493,6 @@
   </div>
 </div>
 
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
