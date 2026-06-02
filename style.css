@@ -338,12 +338,11 @@ html, body {
 #dashboard-screen {
     min-height: 100vh;
     background:
-        radial-gradient(ellipse 900px 700px at 8% 60%,  rgba(37,99,235,0.22) 0%, transparent 65%),
-        radial-gradient(ellipse 700px 600px at 92% 40%,  rgba(29,78,216,0.18) 0%, transparent 65%),
-        radial-gradient(ellipse 600px 400px at 50% 5%,  rgba(96,165,250,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 500px 400px at 75% 95%, rgba(59,130,246,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse at 50% 50%, rgba(15,20,90,0.55) 0%, transparent 75%),
-        #060614;
+        radial-gradient(ellipse 900px 700px at 8% 60%,  rgba(37,99,235,0.08) 0%, transparent 65%),
+        radial-gradient(ellipse 700px 600px at 92% 40%,  rgba(29,78,216,0.06) 0%, transparent 65%),
+        radial-gradient(ellipse 600px 400px at 50% 5%,  rgba(96,165,250,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 500px 400px at 75% 95%, rgba(59,130,246,0.04) 0%, transparent 60%),
+        #070719;
     position: relative;
 }
 
