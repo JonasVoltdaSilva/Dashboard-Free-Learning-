@@ -287,8 +287,9 @@ function mergePartialNames(cnt) {
     for (const c of canonicals) result[c.name] = c.count;
     return result;
 }
-function buildObsChart(sectorFilter, modeFilter) {
+function buildObsChart(sectorFilter, modeFilter, monthFilter) {
     let rows = lastRows.length ? lastRows : allData;
+    if (monthFilter && cols.date >= 0) rows = rows.filter(r => { const d = parseDate(r[cols.date]); return d && monthLabel(d) === monthFilter; });
     if (sectorFilter && cols.dept >= 0) rows = rows.filter(r => String(r[cols.dept] ?? '').trim() === sectorFilter);
     if (modeFilter && cols.mode >= 0) {
         const mf = normalizeStr(modeFilter);
@@ -531,7 +532,8 @@ function renderDashboard(rows) {
 
     const obsSec  = document.getElementById('obs-sector')?.value  || '';
     const obsMode = document.getElementById('obs-mode')?.value    || '';
-    buildObsChart(obsSec, obsMode);
+    const obsMon  = document.getElementById('obs-month')?.value   || '';
+    buildObsChart(obsSec, obsMode, obsMon);
 
     const wSec = document.getElementById('weekly-sector')?.value || '';
     const wMon = document.getElementById('weekly-month')?.value  || '';
@@ -558,6 +560,8 @@ function initDashboard(rows, headers) {
 
     const obsSec = document.getElementById('obs-sector');
     if (obsSec) { while (obsSec.options.length > 1) obsSec.remove(1); initial.sectors.forEach(s => obsSec.add(new Option(s, s))); }
+    const obsMon = document.getElementById('obs-month');
+    if (obsMon) { while (obsMon.options.length > 1) obsMon.remove(1); initial.months.forEach(m => obsMon.add(new Option(m, m))); }
 
     const wSector = document.getElementById('weekly-sector');
     const wMonth  = document.getElementById('weekly-month');
@@ -752,9 +756,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('table-search').addEventListener('input', () => buildTable(lastRows));
 
     // obs + weekly
-    const reObs = () => buildObsChart(document.getElementById('obs-sector').value, document.getElementById('obs-mode').value);
+    const reObs = () => buildObsChart(
+        document.getElementById('obs-sector').value,
+        document.getElementById('obs-mode').value,
+        document.getElementById('obs-month').value
+    );
     document.getElementById('obs-sector')?.addEventListener('change', reObs);
     document.getElementById('obs-mode')?.addEventListener('change', reObs);
+    document.getElementById('obs-month')?.addEventListener('change', reObs);
     const reWeekly = () => buildWeeklyChart(document.getElementById('weekly-sector').value, document.getElementById('weekly-month').value);
     document.getElementById('weekly-sector')?.addEventListener('change', reWeekly);
     document.getElementById('weekly-month')?.addEventListener('change', reWeekly);
