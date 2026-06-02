@@ -89,13 +89,27 @@ function detectCol(headers, keywords) {
 const isModeObservar  = v => v.includes('observ');
 const isModeComunique = v => v.includes('comuniq') || v.includes('comunic');
 
+// Strict versions — used only for column detection to avoid false positives
+const isModeObservarStrict  = v => v.startsWith('observ');
+const isModeComuniqueStrict = v => v.startsWith('comuniq') || v.startsWith('comunic');
+
+const MODE_HEADER_KW = ['titulo', 'title', 'assunto', 'subject', 'tipo_registro', 'categoria_tipo'];
+
 function detectModeCol(headers, rows) {
+    // 1. Try header name first ("Título" is the expected column name)
+    const normH = headers.map(normalizeStr);
+    for (const kw of MODE_HEADER_KW) {
+        const i = normH.findIndex(h => h === kw || h.startsWith(kw));
+        if (i !== -1) return i;
+    }
+    // 2. Fall back to value scanning — use strict startsWith to avoid
+    //    false positives from columns like "Setor: Comunicações" or "Quem Observou"
     let bestIdx = -1, bestScore = 0;
     for (let i = 0; i < headers.length; i++) {
         let matches = 0;
         for (const r of rows) {
             const v = normalizeStr(String(r[i] ?? ''));
-            if (isModeObservar(v) || isModeComunique(v)) matches++;
+            if (isModeObservarStrict(v) || isModeComuniqueStrict(v)) matches++;
         }
         if (matches > bestScore) { bestScore = matches; bestIdx = i; }
     }
