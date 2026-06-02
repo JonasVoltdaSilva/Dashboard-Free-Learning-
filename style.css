@@ -740,9 +740,7 @@ html, body {
 .obs-scroll-wrap::-webkit-scrollbar { width: 4px; }
 .obs-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
 .obs-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 4px; }
-.obs-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
-.obs-scroll-wrap::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 4px; }
-#obs-chart-inner { position: relative; width: 100%; }
+#obs-chart-inner { position: relative; width: 100%; overflow: hidden; }
 #obs-chart-inner canvas { display: block; }
 
 /* Weekly empty state */

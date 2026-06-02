@@ -86,8 +86,8 @@ function detectCol(headers, keywords) {
     return -1;
 }
 
-const isModeObservar  = v => v.startsWith('observ');
-const isModeComunique = v => v.startsWith('comuniq') || v.startsWith('comunic');
+const isModeObservar  = v => v.includes('observ');
+const isModeComunique = v => v.includes('comuniq') || v.includes('comunic');
 
 function detectModeCol(headers, rows) {
     let bestIdx = -1, bestScore = 0;
@@ -269,7 +269,7 @@ function buildDeptChart(deptCnt) {
 // ─── Top Observers ────────────────────────────────────────────────────────────
 
 function mergePartialNames(cnt) {
-    const norm = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
+    const norm = s => s.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ');
     const isPrefix = (short, long) => short.length >= 3 && (long === short || long.startsWith(short + ' '));
     const entries = Object.entries(cnt).sort((a, b) => norm(b[0]).length - norm(a[0]).length);
     const canonicals = [];
