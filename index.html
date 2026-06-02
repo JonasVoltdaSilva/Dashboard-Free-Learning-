@@ -10,7 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=27">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%230b4ea2'/%3E%3Cg stroke='%23fff' stroke-width='2.4' stroke-linecap='round'%3E%3Cline x1='3' y1='14' x2='45' y2='14'/%3E%3Cline x1='3' y1='20' x2='45' y2='20'/%3E%3Cline x1='3' y1='26' x2='45' y2='26'/%3E%3Cline x1='3' y1='32' x2='45' y2='32'/%3E%3Cline x1='3' y1='38' x2='45' y2='38'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css?v=28">
 </head>
 <body>
 
@@ -46,10 +47,16 @@
     <div class="drop-zone" id="drop-zone">
 
       <div class="upload-icon-box">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
+        <svg viewBox="0 0 48 48" width="32" height="32" role="img" aria-label="Bunge">
+          <defs><clipPath id="bgClipUp"><circle cx="24" cy="24" r="20"/></clipPath></defs>
+          <circle cx="24" cy="24" r="20" fill="#ffffff" opacity="0.22"/>
+          <g clip-path="url(#bgClipUp)" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round">
+            <line x1="4" y1="15" x2="44" y2="15"/>
+            <line x1="4" y1="21" x2="44" y2="21"/>
+            <line x1="4" y1="27" x2="44" y2="27"/>
+            <line x1="4" y1="33" x2="44" y2="33"/>
+            <line x1="4" y1="39" x2="44" y2="39"/>
+          </g>
         </svg>
       </div>
 
@@ -135,9 +142,6 @@
         </button>
       </nav>
 
-      <div class="sidebar-foot">
-        <div class="sidebar-avatar" title="Bunge">B</div>
-      </div>
     </aside>
 
     <!-- ── Main Content ── -->
@@ -156,12 +160,6 @@
             </svg>
             FILTROS
           </span>
-          <select class="filter-select" id="filter-from" title="Mês inicial">
-            <option value="">De: início</option>
-          </select>
-          <select class="filter-select" id="filter-to" title="Mês final">
-            <option value="">Até: fim</option>
-          </select>
           <select class="filter-select" id="filter-sector">
             <option value="">Todos os setores</option>
           </select>
@@ -441,16 +439,6 @@
       </div>
 
       <div class="setting-row">
-        <span class="setting-info"><span class="setting-name">Cor de destaque</span><span class="setting-desc">Tema visual do painel</span></span>
-        <div class="accent-swatches" id="accent-swatches">
-          <button class="swatch" data-accent="blue"   style="--sw:#3b82f6" title="Azul"></button>
-          <button class="swatch" data-accent="green"  style="--sw:#10b981" title="Verde"></button>
-          <button class="swatch" data-accent="purple" style="--sw:#8b5cf6" title="Roxo"></button>
-          <button class="swatch" data-accent="amber"  style="--sw:#f59e0b" title="Âmbar"></button>
-        </div>
-      </div>
-
-      <div class="setting-row">
         <span class="setting-info"><span class="setting-name">Itens nos rankings</span><span class="setting-desc">Máx. de barras em departamentos</span></span>
         <select class="filter-select setting-select" id="set-topn">
           <option value="10">Top 10</option>
@@ -488,6 +476,6 @@
   </div>
 </div>
 
-<script src="app.js?v=27"></script>
+<script src="app.js?v=28"></script>
 </body>
 </html>

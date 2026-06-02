@@ -565,11 +565,8 @@ function initDashboard(rows, headers) {
     allData = rows; allHeaders = headers;
     const initial = aggregate(rows);
 
-    const fFrom = document.getElementById('filter-from');
-    const fTo   = document.getElementById('filter-to');
     const fSector = document.getElementById('filter-sector');
-    [fFrom, fTo, fSector].forEach(el => { while (el.options.length > 1) el.remove(1); });
-    initial.months.forEach(m => { fFrom.add(new Option(m, m)); fTo.add(new Option(m, m)); });
+    while (fSector.options.length > 1) fSector.remove(1);
     initial.sectors.forEach(s => fSector.add(new Option(s, s)));
 
     const obsSec = document.getElementById('obs-sector');
@@ -594,22 +591,10 @@ function initDashboard(rows, headers) {
     document.getElementById('dashboard-screen').classList.remove('hidden');
 }
 
-// ─── Filters (intervalo de meses + setor) ─────────────────────────────────────
+// ─── Filters (setor) ──────────────────────────────────────────────────────────
 function applyFilters() {
-    const from = document.getElementById('filter-from').value;
-    const to   = document.getElementById('filter-to').value;
     const sector = document.getElementById('filter-sector').value;
     let filtered = allData;
-
-    if ((from || to) && cols.date >= 0) {
-        const lo = from ? monthOrder(from) : -Infinity;
-        const hi = to   ? monthOrder(to)   :  Infinity;
-        filtered = filtered.filter(row => {
-            const d = parseDate(row[cols.date]); if (!d) return false;
-            const mo = monthOrder(monthLabel(d));
-            return mo >= lo && mo <= hi;
-        });
-    }
     if (sector && cols.dept >= 0) filtered = filtered.filter(row => String(row[cols.dept] ?? '').trim() === sector);
     renderDashboard(filtered);
 }
@@ -672,7 +657,16 @@ async function exportImage(asPdf) {
     if (typeof html2canvas === 'undefined') { showToast('Biblioteca de imagem indisponível.', 'error'); return; }
     showToast('Gerando ' + (asPdf ? 'PDF' : 'imagem') + '…', 'info');
     const node = document.getElementById('dash-main');
-    const canvas = await html2canvas(node, { backgroundColor: getComputedStyle(document.body).backgroundColor || '#090915', scale: 2 });
+    const bgColor = document.body.classList.contains('light') ? '#f0f4fb' : '#060614';
+    const canvas = await html2canvas(node, {
+        backgroundColor: bgColor,
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        windowWidth: node.scrollWidth,
+        windowHeight: node.scrollHeight,
+    });
     if (asPdf) {
         const jspdf = window.jspdf || window.jsPDF;
         const JsPDF = jspdf?.jsPDF || jspdf;
@@ -756,12 +750,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // filtros
-    document.getElementById('filter-from').addEventListener('change', applyFilters);
-    document.getElementById('filter-to').addEventListener('change', applyFilters);
     document.getElementById('filter-sector').addEventListener('change', applyFilters);
     document.getElementById('clear-btn').addEventListener('click', () => {
-        document.getElementById('filter-from').value = '';
-        document.getElementById('filter-to').value = '';
         document.getElementById('filter-sector').value = '';
         renderDashboard(allData);
     });
