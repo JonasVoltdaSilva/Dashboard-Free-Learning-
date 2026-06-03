@@ -394,8 +394,8 @@ function buildWeeklyChart(sector, month) {
     let weekKeyFn, orderWeeks;
     if (month && cols.date >= 0) {
         rows = rows.filter(r => { const d = parseDate(r[cols.date]); return d && monthLabel(d) === month; });
-        weekKeyFn  = d => `Semana ${Math.min(Math.ceil(d.getDate() / 7), 5)}`;
-        orderWeeks = p => ['Semana 1','Semana 2','Semana 3','Semana 4','Semana 5'].filter(k => p.has(k));
+        weekKeyFn  = d => `Semana ${Math.min(Math.ceil(d.getDate() / 7), 4)}`;
+        orderWeeks = p => ['Semana 1','Semana 2','Semana 3','Semana 4'].filter(k => p.has(k));
     } else {
         weekKeyFn  = d => isoWeek(d);
         orderWeeks = p => [...p].sort();
