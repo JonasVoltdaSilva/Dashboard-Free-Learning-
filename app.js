@@ -119,10 +119,11 @@ function detectModeCol(headers, rows) {
 // ─── Date parsing ─────────────────────────────────────────────────────────────
 function parseDate(val) {
     if (val == null || val === '') return null;
-    // SheetJS may return JS Date objects (cellDates:true or some xlsx versions)
+    // SheetJS cellDates:true returns UTC-midnight Date objects; use UTC accessors
+    // to avoid timezone shift (e.g. June 1 UTC = May 31 21:00 in BRT)
     if (val instanceof Date) {
         if (isNaN(val.getTime())) return null;
-        return new Date(val.getFullYear(), val.getMonth(), val.getDate());
+        return new Date(val.getUTCFullYear(), val.getUTCMonth(), val.getUTCDate());
     }
     if (typeof val === 'number' && val > 1000) {
         // Excel serial date; Math.floor strips time fraction from DateTime cells
@@ -426,6 +427,14 @@ function buildWeeklyChart(sector, month) {
     if (labels.length === 0) { destroyChart('weekly'); canvas.style.display = 'none'; empty.style.display = 'flex'; return; }
     canvas.style.display = 'block'; empty.style.display = 'none';
 
+    // Update subtitle with real matched-record totals so user can cross-check with spreadsheet
+    const wSub = document.querySelector('#card-weekly .chart-subtitle');
+    if (wSub && month) {
+        const totC = rows.filter(r => cols.mode >= 0 && isModeComunique(normalizeStr(String(r[cols.mode] ?? '')))).length;
+        const totO = rows.filter(r => cols.mode >= 0 && isModeObservar(normalizeStr(String(r[cols.mode] ?? '')))).length;
+        wSub.textContent = `${rows.length} registros — ${totC} Comunique / ${totO} Observar`;
+    }
+
     const cor = SETTINGS.colorblind ? ['#0072b2','#e69f00','#999999'] : ['#3b82f6','#10b981','#f59e0b'];
     const datasets = [
         { label: 'Comunique', data: labels.map(w => counts[w].comunique), backgroundColor: cor[0], borderRadius: 6, borderSkipped: false },
@@ -624,7 +633,9 @@ function handleFile(file) {
     const reader = new FileReader();
     reader.onload = e => {
         try {
-            const wb  = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: false });
+            // cellDates:true → date cells come back as UTC-midnight JS Date objects
+            // (handled by parseDate's instanceof Date branch using getUTC* methods)
+            const wb  = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
             const ws  = wb.Sheets[wb.SheetNames[0]];
             const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
             if (raw.length < 2) { showToast('Planilha sem dados suficientes.', 'error'); return; }
