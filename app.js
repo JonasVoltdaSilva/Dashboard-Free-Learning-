@@ -86,12 +86,11 @@ function detectCol(headers, keywords) {
     return -1;
 }
 
-const isModeObservar  = v => v.includes('observ');
-const isModeComunique = v => v.includes('comuniq') || v.includes('comunic');
-
-// Strict versions — used only for column detection to avoid false positives
-const isModeObservarStrict  = v => v.startsWith('observ');
-const isModeComuniqueStrict = v => v.startsWith('comuniq') || v.startsWith('comunic');
+// Word-boundary mode check: the keyword must appear at start OR after a non-letter
+// (e.g. "J26 Observar" → "j26observar" — '6' before 'o' is a digit → matches ✓
+//  "Segurança: Observar ou Comunique" → "segurancaobservar..." — 'a' before 'o' is a letter → no match ✓)
+const isModeObservar  = v => /(?:^|[^a-z])observ/.test(v);
+const isModeComunique = v => /(?:^|[^a-z])(comuniq|comunic)/.test(v);
 
 const MODE_HEADER_KW = ['titulo', 'title', 'assunto', 'subject', 'tipo_registro', 'categoria_tipo'];
 
@@ -102,14 +101,15 @@ function detectModeCol(headers, rows) {
         const i = normH.findIndex(h => h === kw || h.startsWith(kw));
         if (i !== -1) return i;
     }
-    // 2. Fall back to value scanning — use strict startsWith to avoid
-    //    false positives from columns like "Setor: Comunicações" or "Quem Observou"
+    // 2. Fall back to value scanning — word-boundary regex handles both
+    //    "J26 Observar" (digit prefix → match) and "Segurança: Observar ou..."
+    //    (letter prefix → no match), so Tipo column is not accidentally chosen
     let bestIdx = -1, bestScore = 0;
     for (let i = 0; i < headers.length; i++) {
         let matches = 0;
         for (const r of rows) {
             const v = normalizeStr(String(r[i] ?? ''));
-            if (isModeObservarStrict(v) || isModeComuniqueStrict(v)) matches++;
+            if (isModeObservar(v) || isModeComunique(v)) matches++;
         }
         if (matches > bestScore) { bestScore = matches; bestIdx = i; }
     }
