@@ -119,21 +119,30 @@ function detectModeCol(headers, rows) {
 // ─── Date parsing ─────────────────────────────────────────────────────────────
 function parseDate(val) {
     if (val == null || val === '') return null;
+    // SheetJS may return JS Date objects (cellDates:true or some xlsx versions)
+    if (val instanceof Date) {
+        if (isNaN(val.getTime())) return null;
+        return new Date(val.getFullYear(), val.getMonth(), val.getDate());
+    }
     if (typeof val === 'number' && val > 1000) {
+        // Excel serial date; Math.floor strips time fraction from DateTime cells
         const base = new Date(1899, 11, 30);
-        const d = new Date(base.getTime() + val * 86400000);
-        return isNaN(d) ? null : d;
+        const d = new Date(base.getTime() + Math.floor(val) * 86400000);
+        if (isNaN(d.getTime())) return null;
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
     const s = String(val).trim();
-    let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+    // DD/MM/YYYY (Brazilian) — no $ so "DD/MM/YYYY HH:MM:SS" also matches
+    let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
     if (m) {
         const y = parseInt(m[3]); const mo = parseInt(m[2]) - 1; const d = parseInt(m[1]);
         return new Date(y < 100 ? 2000 + y : y, mo, d);
     }
+    // YYYY-MM-DD (ISO)
     m = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
     if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? null : d;
+    // Avoid new Date(s) fallback — misinterprets DD/MM/YYYY as MM/DD/YYYY in en-US locales
+    return null;
 }
 
 const MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
