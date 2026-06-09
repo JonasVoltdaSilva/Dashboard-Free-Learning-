@@ -625,7 +625,7 @@ function buildPendingPanel(rows, sectorFilter) {
             ? `${n} registro${n !== 1 ? 's' : ''} pendente${n !== 1 ? 's' : ''} — selecione um setor para ver detalhes`
             : 'Selecione um setor para ver os registros pendentes';
         body.innerHTML = allPending.length === 0
-            ? `<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>`
+            ? `<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de incidente de risco</div>`
             : `<div class="pending-placeholder">Selecione um setor no filtro acima para ver os registros pendentes de classificação.</div>`;
         return;
     }
@@ -634,7 +634,7 @@ function buildPendingPanel(rows, sectorFilter) {
     if (sectorFilter === 'ALL') {
         if (allPending.length === 0) {
             if (subtitle) subtitle.textContent = 'Todos os registros estão classificados';
-            body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>';
+            body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de incidente de risco</div>';
             return;
         }
         const sectorEntries = Object.entries(bySector).sort((a, b) => b[1].length - a[1].length);
@@ -656,7 +656,7 @@ function buildPendingPanel(rows, sectorFilter) {
     const sectorRows = bySector[sectorFilter] || [];
     if (sectorRows.length === 0) {
         if (subtitle) subtitle.textContent = `Setor ${sectorFilter} — nenhuma classificação pendente`;
-        body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>';
+        body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de incidente de risco</div>';
         return;
     }
     const n = sectorRows.length;
