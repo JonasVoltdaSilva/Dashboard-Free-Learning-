@@ -11,70 +11,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b4ea2'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23fff' stroke-width='1.8'/%3E%3Cline x1='7' y1='12' x2='25' y2='12' stroke='%23fff' stroke-width='1.5'/%3E%3Cline x1='7' y1='16' x2='25' y2='16' stroke='%23fff' stroke-width='1.5'/%3E%3Cline x1='7' y1='20' x2='25' y2='20' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=31">
+  <link rel="stylesheet" href="style.css?v=32">
 </head>
 <body>
 
 <!-- Container de notificações (toasts) -->
 <div id="toast-wrap" aria-live="polite"></div>
 
-<!-- ═══════════════════════════════════════════════════ FRONT PAGE SCREEN -->
-<div id="front-page-screen" class="hidden">
-  <div class="fp-bg-orbs" aria-hidden="true"></div>
-  <div class="fp-grid-lines" aria-hidden="true"></div>
-  <div class="fp-center">
-    <div class="fp-card">
-
-      <div class="fp-logo-row">
-        <div class="fp-logo-icon">
-          <svg viewBox="0 0 48 48" width="32" height="32" role="img" aria-label="Bunge">
-            <defs><clipPath id="fpClip"><circle cx="24" cy="24" r="21"/></clipPath></defs>
-            <circle cx="24" cy="24" r="21" fill="#0b4ea2"/>
-            <g clip-path="url(#fpClip)" stroke="#fff" stroke-width="2.4" stroke-linecap="round">
-              <line x1="3" y1="14" x2="45" y2="14"/>
-              <line x1="3" y1="20" x2="45" y2="20"/>
-              <line x1="3" y1="26" x2="45" y2="26"/>
-              <line x1="3" y1="32" x2="45" y2="32"/>
-              <line x1="3" y1="38" x2="45" y2="38"/>
-            </g>
-          </svg>
-        </div>
-        <div>
-          <div class="fp-brand-name">Bunge</div>
-          <div class="fp-brand-sub">Dashboard Analytics</div>
-        </div>
-      </div>
-
-      <h1 class="fp-title">Bem-vindo ao <span class="fp-highlight">Dashboard</span></h1>
-      <p class="fp-desc">Visualize e analise dados de segurança e ocorrências em tempo real.</p>
-
-      <div class="fp-field-wrap">
-        <label class="fp-label" for="fp-name">Seu nome</label>
-        <input type="text" id="fp-name" class="fp-input"
-               placeholder="Como devemos te chamar?" maxlength="40" autocomplete="given-name">
-        <p class="fp-error hidden" id="fp-name-error">Por favor, insira seu nome para continuar.</p>
-      </div>
-
-      <div class="fp-field-wrap">
-        <label class="fp-label">Tema de cores</label>
-        <div class="fp-theme-grid" id="fp-theme-grid"></div>
-      </div>
-
-      <button class="fp-btn" id="fp-start-btn">
-        Começar
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </button>
-
-    </div>
-  </div>
-</div>
-
-
 <!-- ══════════════════════════════════════════════════════ UPLOAD SCREEN -->
-<div id="upload-screen" class="hidden">
+<div id="upload-screen">
 
   <div class="upload-diffuser" aria-hidden="true"></div>
 
@@ -165,12 +110,6 @@
         </svg>
       </div>
 
-      <div class="sidebar-user-wrap hidden" id="sidebar-user-wrap">
-        <button class="sidebar-user-btn" id="sidebar-user-btn" title="Voltar à tela inicial">
-          <span class="sidebar-user-avatar" id="sidebar-user-avatar">?</span>
-        </button>
-      </div>
-
       <nav class="sidebar-nav">
         <button class="snav-btn snav-btn--active" id="nav-dashboard-btn" title="Dashboard">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -211,7 +150,7 @@
       <!-- Top bar -->
       <div class="dash-header">
         <div class="dash-header-left">
-          <h1 class="dash-title"><span id="user-greeting">Dashboard</span></h1>
+          <h1 class="dash-title">Dashboard</h1>
           <span class="dash-subtitle" id="update-time"></span>
         </div>
         <div class="dash-header-right">
@@ -334,6 +273,20 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- Row: Classificação Pendente -->
+      <div class="chart-row chart-row--full hidden" id="row-pending">
+        <div class="chart-card chart-card--alert" id="card-pending">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Classificação Pendente</div>
+              <div class="chart-subtitle" id="pending-subtitle">Registros aguardando atribuição de tipo</div>
+            </div>
+            <span class="badge badge--red">PENDENTE</span>
+          </div>
+          <div id="pending-body"></div>
+        </div>
       </div>
 
       <!-- Row: Dept Bar (full width) — clique filtra o setor -->
@@ -546,11 +499,6 @@
         <span class="switch"><input type="checkbox" id="set-contrast"><span class="slider"></span></span>
       </label>
 
-      <div class="setting-row">
-        <span class="setting-info"><span class="setting-name">Tema de cores</span><span class="setting-desc">Paleta visual do sistema</span></span>
-        <div class="settings-theme-swatches" id="settings-theme-swatches"></div>
-      </div>
-
       <div class="setting-row setting-row--actions">
         <button class="btn-reset" id="set-reset">Restaurar padrões</button>
       </div>
@@ -559,6 +507,6 @@
   </div>
 </div>
 
-<script src="app.js?v=34"></script>
+<script src="app.js?v=35"></script>
 </body>
 </html>

@@ -17,42 +17,7 @@ const ACCENTS = {
     amber:  { main: '#f59e0b', soft: 'rgba(245,158,11,0.22)', glow: 'rgba(245,158,11,0.25)' },
 };
 
-// ─── Color themes ─────────────────────────────────────────────────────────────
-const COLOR_THEMES = {
-    'azul-royal': {
-        label: 'Azul Royal', preview: ['#1e3a8a','#2563eb','#60a5fa'],
-        vars: { '--fp-screen-bg':'#060612','--fp-glow-1':'rgba(25,35,110,0.55)','--fp-glow-2':'rgba(15,20,80,0.30)','--fp-glow-3':'rgba(10,15,70,0.25)','--dash-screen-bg':'#070719','--dash-glow-1':'rgba(37,99,235,0.08)','--dash-glow-2':'rgba(29,78,216,0.06)','--dash-glow-3':'rgba(96,165,250,0.05)','--dash-glow-4':'rgba(59,130,246,0.04)','--accent':'#3b82f6','--accent-soft':'rgba(59,130,246,0.22)','--accent-glow':'rgba(37,99,235,0.25)' }
-    },
-    'verde-esmeralda': {
-        label: 'Verde Esmeralda', preview: ['#064e3b','#059669','#34d399'],
-        vars: { '--fp-screen-bg':'#030f08','--fp-glow-1':'rgba(4,120,87,0.50)','--fp-glow-2':'rgba(2,80,60,0.28)','--fp-glow-3':'rgba(1,50,35,0.22)','--dash-screen-bg':'#040f0b','--dash-glow-1':'rgba(5,150,105,0.08)','--dash-glow-2':'rgba(4,120,87,0.06)','--dash-glow-3':'rgba(52,211,153,0.05)','--dash-glow-4':'rgba(16,185,129,0.04)','--accent':'#10b981','--accent-soft':'rgba(16,185,129,0.22)','--accent-glow':'rgba(5,150,105,0.25)' }
-    },
-    'roxo-violeta': {
-        label: 'Roxo Violeta', preview: ['#3b0764','#7c3aed','#a78bfa'],
-        vars: { '--fp-screen-bg':'#08030f','--fp-glow-1':'rgba(91,33,182,0.50)','--fp-glow-2':'rgba(60,20,130,0.28)','--fp-glow-3':'rgba(40,10,90,0.22)','--dash-screen-bg':'#0a0414','--dash-glow-1':'rgba(124,58,237,0.08)','--dash-glow-2':'rgba(109,40,217,0.06)','--dash-glow-3':'rgba(167,139,250,0.05)','--dash-glow-4':'rgba(139,92,246,0.04)','--accent':'#8b5cf6','--accent-soft':'rgba(139,92,246,0.22)','--accent-glow':'rgba(124,58,237,0.25)' }
-    },
-    'laranja-cobre': {
-        label: 'Laranja Cobre', preview: ['#7c2d12','#ea580c','#fb923c'],
-        vars: { '--fp-screen-bg':'#0f0800','--fp-glow-1':'rgba(194,65,12,0.50)','--fp-glow-2':'rgba(130,40,5,0.28)','--fp-glow-3':'rgba(90,25,5,0.22)','--dash-screen-bg':'#130a01','--dash-glow-1':'rgba(234,88,12,0.08)','--dash-glow-2':'rgba(194,65,12,0.06)','--dash-glow-3':'rgba(251,146,60,0.05)','--dash-glow-4':'rgba(249,115,22,0.04)','--accent':'#f97316','--accent-soft':'rgba(249,115,22,0.22)','--accent-glow':'rgba(234,88,12,0.25)' }
-    },
-    'rosa-crimson': {
-        label: 'Rosa Crimson', preview: ['#831843','#db2777','#f472b6'],
-        vars: { '--fp-screen-bg':'#0f0208','--fp-glow-1':'rgba(190,24,93,0.50)','--fp-glow-2':'rgba(130,15,65,0.28)','--fp-glow-3':'rgba(90,10,45,0.22)','--dash-screen-bg':'#12030a','--dash-glow-1':'rgba(219,39,119,0.08)','--dash-glow-2':'rgba(190,24,93,0.06)','--dash-glow-3':'rgba(244,114,182,0.05)','--dash-glow-4':'rgba(236,72,153,0.04)','--accent':'#ec4899','--accent-soft':'rgba(236,72,153,0.22)','--accent-glow':'rgba(219,39,119,0.25)' }
-    },
-    'ciano-oceano': {
-        label: 'Ciano Oceano', preview: ['#0c4a6e','#0891b2','#22d3ee'],
-        vars: { '--fp-screen-bg':'#020b10','--fp-glow-1':'rgba(8,145,178,0.50)','--fp-glow-2':'rgba(5,100,130,0.28)','--fp-glow-3':'rgba(3,70,100,0.22)','--dash-screen-bg':'#030e14','--dash-glow-1':'rgba(6,182,212,0.08)','--dash-glow-2':'rgba(8,145,178,0.06)','--dash-glow-3':'rgba(34,211,238,0.05)','--dash-glow-4':'rgba(14,165,233,0.04)','--accent':'#06b6d4','--accent-soft':'rgba(6,182,212,0.22)','--accent-glow':'rgba(8,145,178,0.25)' }
-    },
-    'indigo-nebulosa': {
-        label: 'Índigo Nebulosa', preview: ['#1e1b4b','#4338ca','#818cf8'],
-        vars: { '--fp-screen-bg':'#04030f','--fp-glow-1':'rgba(67,56,202,0.50)','--fp-glow-2':'rgba(49,46,129,0.28)','--fp-glow-3':'rgba(30,27,75,0.22)','--dash-screen-bg':'#060514','--dash-glow-1':'rgba(99,102,241,0.08)','--dash-glow-2':'rgba(79,70,229,0.06)','--dash-glow-3':'rgba(129,140,248,0.05)','--dash-glow-4':'rgba(99,102,241,0.04)','--accent':'#6366f1','--accent-soft':'rgba(99,102,241,0.22)','--accent-glow':'rgba(67,56,202,0.25)' }
-    },
-    'vermelho-rubi': {
-        label: 'Vermelho Rubi', preview: ['#7f1d1d','#dc2626','#f87171'],
-        vars: { '--fp-screen-bg':'#100202','--fp-glow-1':'rgba(185,28,28,0.50)','--fp-glow-2':'rgba(130,15,15,0.28)','--fp-glow-3':'rgba(90,8,8,0.22)','--dash-screen-bg':'#140303','--dash-glow-1':'rgba(220,38,38,0.08)','--dash-glow-2':'rgba(185,28,28,0.06)','--dash-glow-3':'rgba(248,113,113,0.05)','--dash-glow-4':'rgba(239,68,68,0.04)','--accent':'#ef4444','--accent-soft':'rgba(239,68,68,0.22)','--accent-glow':'rgba(220,38,38,0.25)' }
-    },
-};
-const DEFAULT_SETTINGS = { theme: 'dark', accent: 'blue', topN: 20, colorblind: false, animations: true, compact: false, contrast: false, colorTheme: 'azul-royal' };
+const DEFAULT_SETTINGS = { theme: 'dark', accent: 'blue', topN: 20, colorblind: false, animations: true, compact: false, contrast: false };
 const DEFAULT_VISIBLE  = { dept: true, weekly: true, obs: true, stacked: true, table: true };
 
 let SETTINGS = { ...DEFAULT_SETTINGS };
@@ -67,118 +32,6 @@ function loadPrefs() {
 function savePrefs() {
     localStorage.setItem('bunge_settings', JSON.stringify(SETTINGS));
     localStorage.setItem('bunge_visible', JSON.stringify(VISIBLE));
-}
-
-// ─── User persistence ─────────────────────────────────────────────────────────
-const USER_KEY = 'bunge_user';
-function loadUser() { try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch { return null; } }
-function saveUser(data) { localStorage.setItem(USER_KEY, JSON.stringify(data)); }
-
-// ─── Apply color theme ────────────────────────────────────────────────────────
-function applyColorTheme(name) {
-    const theme = COLOR_THEMES[name];
-    if (!theme) return;
-    const root = document.documentElement;
-    Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v));
-    SETTINGS.colorTheme = name;
-}
-
-// ─── Front page UI helpers ────────────────────────────────────────────────────
-function updateUserGreeting(name) {
-    const el = document.getElementById('user-greeting');
-    if (el) el.textContent = name ? `Olá, ${name.split(' ')[0]}` : 'Dashboard';
-    const avatar = document.getElementById('sidebar-user-avatar');
-    if (avatar && name) avatar.textContent = name.trim()[0].toUpperCase();
-    const wrap = document.getElementById('sidebar-user-wrap');
-    if (wrap) wrap.classList.toggle('hidden', !name);
-}
-
-function buildFrontPageThemeCards(currentTheme) {
-    const grid = document.getElementById('fp-theme-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    Object.entries(COLOR_THEMES).forEach(([key, theme]) => {
-        const btn = document.createElement('button');
-        btn.className = 'fp-theme-card' + (key === currentTheme ? ' fp-theme-card--active' : '');
-        btn.dataset.theme = key;
-        btn.title = theme.label;
-        btn.innerHTML = `<div class="fp-theme-swatches">${theme.preview.map(c => `<div class="fp-swatch" style="background:${c}"></div>`).join('')}</div><span class="fp-theme-name">${theme.label}</span>`;
-        btn.addEventListener('click', () => {
-            grid.querySelectorAll('.fp-theme-card').forEach(c => c.classList.remove('fp-theme-card--active'));
-            btn.classList.add('fp-theme-card--active');
-            applyColorTheme(key);
-            document.querySelectorAll('.settings-theme-swatch').forEach(s => s.classList.toggle('settings-theme-swatch--active', s.dataset.theme === key));
-        });
-        grid.appendChild(btn);
-    });
-}
-
-function buildSettingsThemeSwatches(currentTheme) {
-    const wrap = document.getElementById('settings-theme-swatches');
-    if (!wrap) return;
-    wrap.innerHTML = '';
-    Object.entries(COLOR_THEMES).forEach(([key, theme]) => {
-        const btn = document.createElement('button');
-        btn.className = 'settings-theme-swatch' + (key === currentTheme ? ' settings-theme-swatch--active' : '');
-        btn.dataset.theme = key;
-        btn.title = theme.label;
-        btn.style.background = `linear-gradient(135deg, ${theme.preview[0]}, ${theme.preview[1]})`;
-        btn.addEventListener('click', () => {
-            wrap.querySelectorAll('.settings-theme-swatch').forEach(s => s.classList.remove('settings-theme-swatch--active'));
-            btn.classList.add('settings-theme-swatch--active');
-            applyColorTheme(key);
-            savePrefs();
-            document.querySelectorAll('.fp-theme-card').forEach(c => c.classList.toggle('fp-theme-card--active', c.dataset.theme === key));
-        });
-        wrap.appendChild(btn);
-    });
-}
-
-function setupFrontPage() {
-    const startBtn = document.getElementById('fp-start-btn');
-    const nameInput = document.getElementById('fp-name');
-    const nameError = document.getElementById('fp-name-error');
-    if (!startBtn) return;
-
-    nameInput?.addEventListener('input', () => {
-        nameInput.classList.remove('fp-input--error');
-        nameError?.classList.add('hidden');
-    });
-    nameInput?.addEventListener('keydown', e => { if (e.key === 'Enter') startBtn.click(); });
-
-    startBtn.addEventListener('click', () => {
-        const name = (nameInput?.value || '').trim();
-        if (!name) {
-            nameInput?.classList.add('fp-input--error');
-            nameError?.classList.remove('hidden');
-            nameInput?.focus();
-            return;
-        }
-        saveUser({ name, theme: SETTINGS.colorTheme || 'azul-royal' });
-        savePrefs();
-        updateUserGreeting(name);
-
-        const fp = document.getElementById('front-page-screen');
-        fp.classList.add('fp-exit');
-        setTimeout(() => {
-            fp.classList.add('hidden');
-            fp.classList.remove('fp-exit');
-            document.getElementById('upload-screen').classList.remove('hidden');
-        }, 380);
-    });
-}
-
-function showFrontPage() {
-    const currentTheme = SETTINGS.colorTheme || 'azul-royal';
-    buildFrontPageThemeCards(currentTheme);
-    applyColorTheme(currentTheme);
-    const user = loadUser();
-    const nameInput = document.getElementById('fp-name');
-    if (nameInput && user?.name) nameInput.value = user.name;
-    document.getElementById('dashboard-screen')?.classList.add('hidden');
-    document.getElementById('upload-screen')?.classList.add('hidden');
-    const fp = document.getElementById('front-page-screen');
-    fp.classList.remove('hidden', 'fp-exit');
 }
 
 const anim = () => (SETTINGS.animations ? { duration: 700 } : false);
@@ -683,6 +536,76 @@ function buildTable(rows) {
 }
 function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
+function formatDateCell(val) {
+    if (!val) return '—';
+    const d = parseDate(val);
+    return d ? d.toLocaleDateString('pt-BR') : escapeHtml(String(val));
+}
+
+// ─── Classificação Pendente ───────────────────────────────────────────────────
+function buildPendingPanel(rows) {
+    const rowEl = document.getElementById('row-pending');
+    if (!rowEl) return;
+
+    if (cols.type < 0) { rowEl.classList.add('hidden'); return; }
+    rowEl.classList.remove('hidden');
+
+    const unclassified = rows.filter(r => !String(r[cols.type] ?? '').trim());
+    const subtitle = document.getElementById('pending-subtitle');
+    const body = document.getElementById('pending-body');
+    if (!body) return;
+
+    if (unclassified.length === 0) {
+        if (subtitle) subtitle.textContent = 'Todos os registros estão classificados';
+        body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>';
+        return;
+    }
+
+    // Group unclassified by sector
+    const bySector = {};
+    for (const row of unclassified) {
+        const dept = cols.dept >= 0 ? (String(row[cols.dept] ?? '').trim() || '(sem setor)') : '(sem setor)';
+        bySector[dept] = (bySector[dept] || 0) + 1;
+    }
+    const sectorEntries = Object.entries(bySector).sort((a, b) => b[1] - a[1]);
+
+    if (subtitle) {
+        const n = unclassified.length, s = sectorEntries.length;
+        subtitle.textContent = `${n} registro${n !== 1 ? 's' : ''} sem tipo — ${s} setor${s !== 1 ? 'es' : ''} afetado${s !== 1 ? 's' : ''}`;
+    }
+
+    // Determine available columns for the records table
+    const colHeaders = [], colFns = [];
+    if (cols.dept >= 0) { colHeaders.push('Setor');      colFns.push(r => escapeHtml(String(r[cols.dept] ?? ''))); }
+    if (cols.date >= 0) { colHeaders.push('Data');       colFns.push(r => formatDateCell(r[cols.date])); }
+    if (cols.obs  >= 0) { colHeaders.push('Observador'); colFns.push(r => escapeHtml(String(r[cols.obs]  ?? ''))); }
+    if (cols.mode >= 0) { colHeaders.push('Título');     colFns.push(r => escapeHtml(String(r[cols.mode] ?? ''))); }
+
+    const shown = unclassified.slice(0, 200);
+
+    body.innerHTML = `
+        <div class="pending-layout">
+            <div class="pending-sectors">
+                <div class="pending-section-title">Por Setor</div>
+                ${sectorEntries.map(([s, c]) => `
+                    <div class="pending-sector-row">
+                        <span class="pending-sector-name">${escapeHtml(s)}</span>
+                        <span class="pending-sector-count">${c}</span>
+                    </div>`).join('')}
+            </div>
+            <div class="pending-table-wrap">
+                <div class="pending-section-title">Registros sem classificação</div>
+                <div class="pending-table-scroll">
+                    <table class="pending-table">
+                        <thead><tr>${colHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                        <tbody>${shown.map(row => `<tr>${colFns.map(fn => `<td>${fn(row)}</td>`).join('')}</tr>`).join('')}</tbody>
+                    </table>
+                    ${unclassified.length > 200 ? `<div class="pending-more">+${unclassified.length - 200} registros adicionais não exibidos</div>` : ''}
+                </div>
+            </div>
+        </div>`;
+}
+
 // ─── KPI counter animation ────────────────────────────────────────────────────
 function animateValue(el, target) {
     if (!SETTINGS.animations) { el.textContent = target.toLocaleString('pt-BR'); return; }
@@ -709,6 +632,7 @@ function renderDashboard(rows) {
     renderKpi('types', d.totalTypes);
     renderKpi('unclassified', d.unclassified);
 
+    buildPendingPanel(rows);
     buildDeptChart(d.deptCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
     buildTable(rows);
@@ -868,14 +792,10 @@ function applyChartVisibility() {
 // ─── Settings ─────────────────────────────────────────────────────────────────
 function applySettings(rerender = false) {
     const root = document.documentElement;
-    if (SETTINGS.colorTheme && COLOR_THEMES[SETTINGS.colorTheme]) {
-        applyColorTheme(SETTINGS.colorTheme);
-    } else {
-        const acc = ACCENTS[SETTINGS.accent] || ACCENTS.blue;
-        root.style.setProperty('--accent', acc.main);
-        root.style.setProperty('--accent-soft', acc.soft);
-        root.style.setProperty('--accent-glow', acc.glow);
-    }
+    const acc = ACCENTS[SETTINGS.accent] || ACCENTS.blue;
+    root.style.setProperty('--accent', acc.main);
+    root.style.setProperty('--accent-soft', acc.soft);
+    root.style.setProperty('--accent-glow', acc.glow);
 
     document.body.classList.toggle('light', SETTINGS.theme === 'light');
     document.body.classList.toggle('compact', SETTINGS.compact);
@@ -907,30 +827,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPrefs();
     applySettings(false);
     applyChartVisibility();
-
-    // Color theme & front page setup
-    const colorTheme = SETTINGS.colorTheme || 'azul-royal';
-    applyColorTheme(colorTheme);
-    buildSettingsThemeSwatches(colorTheme);
-    setupFrontPage();
-
-    const savedUser = loadUser();
-    if (savedUser?.name) {
-        document.getElementById('front-page-screen').classList.add('hidden');
-        document.getElementById('upload-screen').classList.remove('hidden');
-        updateUserGreeting(savedUser.name);
-        if (savedUser.theme && COLOR_THEMES[savedUser.theme]) {
-            SETTINGS.colorTheme = savedUser.theme;
-            applyColorTheme(savedUser.theme);
-            buildSettingsThemeSwatches(savedUser.theme);
-        }
-        buildFrontPageThemeCards(SETTINGS.colorTheme || colorTheme);
-    } else {
-        document.getElementById('front-page-screen').classList.remove('hidden');
-        buildFrontPageThemeCards(colorTheme);
-    }
-
-    document.getElementById('sidebar-user-btn')?.addEventListener('click', showFrontPage);
 
     const fileInput = document.getElementById('file-input');
     const dropZone  = document.getElementById('drop-zone');
@@ -1014,9 +910,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('set-contrast')?.addEventListener('change', e => { SETTINGS.contrast = e.target.checked; applySettings(false); savePrefs(); });
     document.getElementById('set-reset')?.addEventListener('click', () => {
         SETTINGS = { ...DEFAULT_SETTINGS }; VISIBLE = { ...DEFAULT_VISIBLE };
-        applySettings(true); applyChartVisibility();
-        buildSettingsThemeSwatches(SETTINGS.colorTheme);
-        buildFrontPageThemeCards(SETTINGS.colorTheme);
-        savePrefs(); showToast('Padrões restaurados', 'success');
+        applySettings(true); applyChartVisibility(); savePrefs(); showToast('Padrões restaurados', 'success');
     });
 });
