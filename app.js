@@ -583,18 +583,17 @@ function isPendingRow(row) {
 }
 
 function buildPendingTable(rows) {
-    const colHeaders = [], colFns = [];
-    if (cols.date >= 0) { colHeaders.push('Data');       colFns.push(r => formatDateCell(r[cols.date])); }
-    if (cols.obs  >= 0) { colHeaders.push('Observador'); colFns.push(r => escapeHtml(String(r[cols.obs]  ?? ''))); }
-    if (cols.mode >= 0) { colHeaders.push('Título');     colFns.push(r => escapeHtml(String(r[cols.mode] ?? ''))); }
+    const colHeaders = [], colFns = [], colCls = [];
+    if (cols.date >= 0) { colHeaders.push('Data');       colFns.push(r => formatDateCell(r[cols.date]));              colCls.push('col-date'); }
+    if (cols.obs  >= 0) { colHeaders.push('Observador'); colFns.push(r => escapeHtml(String(r[cols.obs]  ?? '')));   colCls.push('col-obs');  }
+    if (cols.mode >= 0) { colHeaders.push('Título');     colFns.push(r => escapeHtml(String(r[cols.mode] ?? '')));   colCls.push('col-mode'); }
     if (!colHeaders.length) return '<p class="pending-placeholder">Nenhuma coluna adicional disponível.</p>';
-    const shown = rows.slice(0, 200);
     return `<div class="pending-table-scroll">
         <table class="pending-table">
-            <thead><tr>${colHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-            <tbody>${shown.map(row => `<tr>${colFns.map(fn => `<td>${fn(row)}</td>`).join('')}</tr>`).join('')}</tbody>
+            <colgroup>${colCls.map(c => `<col class="${c}">`).join('')}</colgroup>
+            <thead><tr>${colHeaders.map((h, i) => `<th class="${colCls[i]}">${h}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(row => `<tr>${colFns.map((fn, i) => `<td class="${colCls[i]}">${fn(row)}</td>`).join('')}</tr>`).join('')}</tbody>
         </table>
-        ${rows.length > 200 ? `<div class="pending-more">+${rows.length - 200} registros adicionais não exibidos</div>` : ''}
     </div>`;
 }
 
