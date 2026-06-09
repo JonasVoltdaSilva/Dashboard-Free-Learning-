@@ -3,7 +3,7 @@
 // ─── State ────────────────────────────────────────────────────────────────────
 let allData = [];
 let allHeaders = [];
-let cols = { dept: -1, type: -1, obs: -1, date: -1, mode: -1 };
+let cols = { dept: -1, type: -1, obs: -1, date: -1, mode: -1, classified: -1 };
 let charts = {};
 let cachedProcessed = null;
 let lastRows = [];
@@ -69,6 +69,7 @@ const KEYWORDS = {
            'funcionario', 'funcionário', 'autor', 'registrado', 'reporter', 'observer',
            'colaborador', 'registrant', 'quem'],
     date: ['data', 'date', 'mes', 'mês', 'periodo', 'período', 'dt_', 'datahora'],
+    classified: ['classificado', 'classificacao', 'classificação', 'status', 'situacao', 'situação', 'pendente'],
 };
 
 function normalizeStr(s) {
@@ -93,6 +94,10 @@ function detectCol(headers, keywords) {
 const isModeObservar  = v => /(?:^|[^a-z])observ/.test(v);
 const isModeComunique = v => /(?:^|[^a-z])(comuniq|comunic)/.test(v);
 
+// Sim/Não classification detection helpers
+const isNaoValue = v => /^n[aã]o$/i.test(String(v).trim());
+const isSimValue = v => /^sim$/i.test(String(v).trim());
+
 const MODE_HEADER_KW = ['titulo', 'title', 'assunto', 'subject', 'tipo_registro', 'categoria_tipo'];
 
 function detectModeCol(headers, rows) {
@@ -111,6 +116,27 @@ function detectModeCol(headers, rows) {
         for (const r of rows) {
             const v = normalizeStr(String(r[i] ?? ''));
             if (isModeObservar(v) || isModeComunique(v)) matches++;
+        }
+        if (matches > bestScore) { bestScore = matches; bestIdx = i; }
+    }
+    return bestScore > 0 ? bestIdx : -1;
+}
+
+function detectClassifiedCol(headers, rows) {
+    // 1. Try header keywords
+    const normH = headers.map(normalizeStr);
+    const classKw = KEYWORDS.classified.map(normalizeStr);
+    for (const kw of classKw) {
+        const i = normH.findIndex(h => h.includes(kw));
+        if (i !== -1) return i;
+    }
+    // 2. Value scan: find column where most cells are "sim" or "não"
+    let bestIdx = -1, bestScore = 0;
+    for (let i = 0; i < headers.length; i++) {
+        let matches = 0;
+        for (const r of rows) {
+            const v = String(r[i] ?? '').trim();
+            if (isNaoValue(v) || isSimValue(v)) matches++;
         }
         if (matches > bestScore) { bestScore = matches; bestIdx = i; }
     }
@@ -176,7 +202,12 @@ function aggregate(rows) {
 
         if (dept) { deptCnt[dept] = (deptCnt[dept] || 0) + 1; sectorSet.add(dept); }
         if (type) { typeCnt[type] = (typeCnt[type] || 0) + 1; }
-        if (cols.type >= 0 && !type) unclassified++;
+        if (cols.classified >= 0) {
+            const cls = String(row[cols.classified] ?? '').trim();
+            if (isNaoValue(cls)) unclassified++;
+        } else if (cols.type >= 0 && !type) {
+            unclassified++;
+        }
         if (obs)  { obsCnt[obs]   = (obsCnt[obs]   || 0) + 1; }
 
         if (date) {
@@ -543,67 +574,94 @@ function formatDateCell(val) {
 }
 
 // ─── Classificação Pendente ───────────────────────────────────────────────────
-function buildPendingPanel(rows) {
+function isPendingRow(row) {
+    if (cols.classified >= 0) {
+        const cls = String(row[cols.classified] ?? '').trim();
+        return isNaoValue(cls);
+    }
+    return cols.type >= 0 && !String(row[cols.type] ?? '').trim();
+}
+
+function buildPendingTable(rows) {
+    const colHeaders = [], colFns = [];
+    if (cols.date >= 0) { colHeaders.push('Data');       colFns.push(r => formatDateCell(r[cols.date])); }
+    if (cols.obs  >= 0) { colHeaders.push('Observador'); colFns.push(r => escapeHtml(String(r[cols.obs]  ?? ''))); }
+    if (cols.mode >= 0) { colHeaders.push('Título');     colFns.push(r => escapeHtml(String(r[cols.mode] ?? ''))); }
+    if (!colHeaders.length) return '<p class="pending-placeholder">Nenhuma coluna adicional disponível.</p>';
+    const shown = rows.slice(0, 200);
+    return `<div class="pending-table-scroll">
+        <table class="pending-table">
+            <thead><tr>${colHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${shown.map(row => `<tr>${colFns.map(fn => `<td>${fn(row)}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+        ${rows.length > 200 ? `<div class="pending-more">+${rows.length - 200} registros adicionais não exibidos</div>` : ''}
+    </div>`;
+}
+
+function buildPendingPanel(rows, sectorFilter) {
     const rowEl = document.getElementById('row-pending');
     if (!rowEl) return;
 
-    if (cols.type < 0) { rowEl.classList.add('hidden'); return; }
+    if (cols.classified < 0 && cols.type < 0) { rowEl.classList.add('hidden'); return; }
     rowEl.classList.remove('hidden');
 
-    const unclassified = rows.filter(r => !String(r[cols.type] ?? '').trim());
+    const allPending = rows.filter(isPendingRow);
     const subtitle = document.getElementById('pending-subtitle');
     const body = document.getElementById('pending-body');
     if (!body) return;
 
-    if (unclassified.length === 0) {
-        if (subtitle) subtitle.textContent = 'Todos os registros estão classificados';
-        body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>';
+    // Group by sector across ALL pending rows (for select population and counts)
+    const bySector = {};
+    for (const row of allPending) {
+        const dept = cols.dept >= 0 ? (String(row[cols.dept] ?? '').trim() || '(sem setor)') : '(sem setor)';
+        if (!bySector[dept]) bySector[dept] = [];
+        bySector[dept].push(row);
+    }
+
+    // No sector selected → placeholder
+    if (!sectorFilter) {
+        const n = allPending.length, s = Object.keys(bySector).length;
+        if (subtitle) subtitle.textContent = n > 0
+            ? `${n} registro${n !== 1 ? 's' : ''} pendente${n !== 1 ? 's' : ''} — selecione um setor para ver detalhes`
+            : 'Selecione um setor para ver os registros pendentes';
+        body.innerHTML = allPending.length === 0
+            ? `<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>`
+            : `<div class="pending-placeholder">Selecione um setor no filtro acima para ver os registros pendentes de classificação.</div>`;
         return;
     }
 
-    // Group unclassified by sector
-    const bySector = {};
-    for (const row of unclassified) {
-        const dept = cols.dept >= 0 ? (String(row[cols.dept] ?? '').trim() || '(sem setor)') : '(sem setor)';
-        bySector[dept] = (bySector[dept] || 0) + 1;
-    }
-    const sectorEntries = Object.entries(bySector).sort((a, b) => b[1] - a[1]);
-
-    if (subtitle) {
-        const n = unclassified.length, s = sectorEntries.length;
-        subtitle.textContent = `${n} registro${n !== 1 ? 's' : ''} sem tipo — ${s} setor${s !== 1 ? 'es' : ''} afetado${s !== 1 ? 's' : ''}`;
-    }
-
-    // Determine available columns for the records table
-    const colHeaders = [], colFns = [];
-    if (cols.dept >= 0) { colHeaders.push('Setor');      colFns.push(r => escapeHtml(String(r[cols.dept] ?? ''))); }
-    if (cols.date >= 0) { colHeaders.push('Data');       colFns.push(r => formatDateCell(r[cols.date])); }
-    if (cols.obs  >= 0) { colHeaders.push('Observador'); colFns.push(r => escapeHtml(String(r[cols.obs]  ?? ''))); }
-    if (cols.mode >= 0) { colHeaders.push('Título');     colFns.push(r => escapeHtml(String(r[cols.mode] ?? ''))); }
-
-    const shown = unclassified.slice(0, 200);
-
-    body.innerHTML = `
-        <div class="pending-layout">
-            <div class="pending-sectors">
-                <div class="pending-section-title">Por Setor</div>
-                ${sectorEntries.map(([s, c]) => `
-                    <div class="pending-sector-row">
-                        <span class="pending-sector-name">${escapeHtml(s)}</span>
-                        <span class="pending-sector-count">${c}</span>
-                    </div>`).join('')}
-            </div>
-            <div class="pending-table-wrap">
-                <div class="pending-section-title">Registros sem classificação</div>
-                <div class="pending-table-scroll">
-                    <table class="pending-table">
-                        <thead><tr>${colHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-                        <tbody>${shown.map(row => `<tr>${colFns.map(fn => `<td>${fn(row)}</td>`).join('')}</tr>`).join('')}</tbody>
-                    </table>
-                    ${unclassified.length > 200 ? `<div class="pending-more">+${unclassified.length - 200} registros adicionais não exibidos</div>` : ''}
+    // All sectors → grouped view
+    if (sectorFilter === 'ALL') {
+        if (allPending.length === 0) {
+            if (subtitle) subtitle.textContent = 'Todos os registros estão classificados';
+            body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>';
+            return;
+        }
+        const sectorEntries = Object.entries(bySector).sort((a, b) => b[1].length - a[1].length);
+        const n = allPending.length, s = sectorEntries.length;
+        if (subtitle) subtitle.textContent = `${n} registro${n !== 1 ? 's' : ''} pendente${n !== 1 ? 's' : ''} em ${s} setor${s !== 1 ? 'es' : ''}`;
+        body.innerHTML = `<div class="pending-all-view">${sectorEntries.map(([sName, sRows]) => `
+            <div class="pending-sector-group">
+                <div class="pending-sector-header">
+                    <span class="pending-group-name">${escapeHtml(sName)}</span>
+                    <span class="pending-sector-count">${sRows.length} pendente${sRows.length !== 1 ? 's' : ''}</span>
                 </div>
-            </div>
+                ${buildPendingTable(sRows)}
+            </div>`).join('')}
         </div>`;
+        return;
+    }
+
+    // Specific sector
+    const sectorRows = bySector[sectorFilter] || [];
+    if (sectorRows.length === 0) {
+        if (subtitle) subtitle.textContent = `Setor ${sectorFilter} — nenhuma classificação pendente`;
+        body.innerHTML = '<div class="pending-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Você concluiu as classificações de risco</div>';
+        return;
+    }
+    const n = sectorRows.length;
+    if (subtitle) subtitle.textContent = `${escapeHtml(sectorFilter)} — ${n} registro${n !== 1 ? 's' : ''} pendente${n !== 1 ? 's' : ''} de classificação`;
+    body.innerHTML = buildPendingTable(sectorRows);
 }
 
 // ─── KPI counter animation ────────────────────────────────────────────────────
@@ -632,7 +690,7 @@ function renderDashboard(rows) {
     renderKpi('types', d.totalTypes);
     renderKpi('unclassified', d.unclassified);
 
-    buildPendingPanel(rows);
+    buildPendingPanel(rows, document.getElementById('pending-sector')?.value || '');
     buildDeptChart(d.deptCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
     buildTable(rows);
@@ -649,11 +707,12 @@ function renderDashboard(rows) {
 
 // ─── Init from file ────────────────────────────────────────────────────────────
 function initDashboard(rows, headers) {
-    cols.dept = detectCol(headers, KEYWORDS.dept);
-    cols.type = detectCol(headers, KEYWORDS.type);
-    cols.obs  = detectCol(headers, KEYWORDS.obs);
-    cols.date = detectCol(headers, KEYWORDS.date);
-    cols.mode = detectModeCol(headers, rows);
+    cols.dept       = detectCol(headers, KEYWORDS.dept);
+    cols.type       = detectCol(headers, KEYWORDS.type);
+    cols.obs        = detectCol(headers, KEYWORDS.obs);
+    cols.date       = detectCol(headers, KEYWORDS.date);
+    cols.mode       = detectModeCol(headers, rows);
+    cols.classified = detectClassifiedCol(headers, rows);
 
     allData = rows; allHeaders = headers;
     const initial = aggregate(rows);
@@ -673,6 +732,13 @@ function initDashboard(rows, headers) {
     if (wMonth)  { while (wMonth.options.length  > 1) wMonth.remove(1); }
     initial.sectors.forEach(s => wSector?.add(new Option(s, s)));
     initial.months.forEach(m => wMonth?.add(new Option(m, m)));
+
+    const pendingSec = document.getElementById('pending-sector');
+    if (pendingSec) {
+        while (pendingSec.options.length > 2) pendingSec.remove(2);
+        pendingSec.value = '';
+        initial.sectors.forEach(s => pendingSec.add(new Option(s, s)));
+    }
 
     document.getElementById('update-time').textContent =
         'Atualizado: ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -846,6 +912,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // filtros
     document.getElementById('filter-sector').addEventListener('change', applyFilters);
+    document.getElementById('pending-sector')?.addEventListener('change', () =>
+        buildPendingPanel(lastRows, document.getElementById('pending-sector').value));
     document.getElementById('clear-btn').addEventListener('click', () => {
         document.getElementById('filter-sector').value = '';
         renderDashboard(allData);

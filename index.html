@@ -11,7 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b4ea2'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23fff' stroke-width='1.8'/%3E%3Cline x1='7' y1='12' x2='25' y2='12' stroke='%23fff' stroke-width='1.5'/%3E%3Cline x1='7' y1='16' x2='25' y2='16' stroke='%23fff' stroke-width='1.5'/%3E%3Cline x1='7' y1='20' x2='25' y2='20' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=32">
+  <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
 
@@ -256,7 +256,7 @@
           </div>
         </div>
 
-        <div class="kpi-card kpi-card--red">
+        <div class="kpi-card kpi-card--blue">
           <div class="kpi-glow"></div>
           <div class="kpi-card-top">
             <div class="kpi-icon-box">
@@ -283,7 +283,13 @@
               <div class="chart-title">Classificação Pendente</div>
               <div class="chart-subtitle" id="pending-subtitle">Registros aguardando atribuição de tipo</div>
             </div>
-            <span class="badge badge--red">PENDENTE</span>
+            <div class="chart-head-right">
+              <select class="chart-filter-select" id="pending-sector">
+                <option value="">Selecione o setor...</option>
+                <option value="ALL">Todos os setores</option>
+              </select>
+              <span class="badge badge--red">PENDENTE</span>
+            </div>
           </div>
           <div id="pending-body"></div>
         </div>
@@ -507,6 +513,6 @@
   </div>
 </div>
 
-<script src="app.js?v=35"></script>
+<script src="app.js?v=36"></script>
 </body>
 </html>
