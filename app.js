@@ -69,7 +69,7 @@ const KEYWORDS = {
            'funcionario', 'funcionário', 'autor', 'registrado', 'reporter', 'observer',
            'colaborador', 'registrant', 'quem'],
     date: ['data', 'date', 'mes', 'mês', 'periodo', 'período', 'dt_', 'datahora'],
-    classified: ['classificado', 'classificacao', 'classificação', 'status', 'situacao', 'situação', 'pendente'],
+    classified: ['concluiu', 'classificac', 'classificado', 'classificacao', 'classificação', 'status', 'situacao', 'situação', 'pendente'],
 };
 
 function normalizeStr(s) {
@@ -96,7 +96,7 @@ const isModeComunique = v => /(?:^|[^a-z])(comuniq|comunic)/.test(v);
 
 // Sim/Não classification detection helpers
 const isNaoValue = v => /^n[aã]o$/i.test(String(v).trim());
-const isSimValue = v => /^sim$/i.test(String(v).trim());
+const isSimValue = v => /\bsim\b/i.test(String(v));
 
 const MODE_HEADER_KW = ['titulo', 'title', 'assunto', 'subject', 'tipo_registro', 'categoria_tipo'];
 
