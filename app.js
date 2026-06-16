@@ -716,7 +716,7 @@ const DPA_TEAM = [
     { display: 'Hercules Oliveira',  first: 'hercules',  surnames: ['oliveira'] },
     { display: 'Jhonny Rodrigues',   first: 'jhonny',    surnames: ['deividy', 'rodrigues'] },
     { display: 'Joacir Miranda',     first: 'joacir',    surnames: ['miranda'] },
-    { display: 'Jose Natalino',      first: 'jose',      surnames: ['natalino'] },
+    { display: 'Jose Natalino',      first: 'jose',      alt: ['natalino'], surnames: ['natalino'] },
     { display: 'Jucimar Lima',       first: 'jucimar',   surnames: ['lima', 'souza'] },
     { display: 'Kauan Racis',        first: 'kauan',     surnames: ['racis'] },
     { display: 'Leonardo Teixeira',  first: 'leonardo',  surnames: ['santana', 'teixeira'] },
@@ -741,10 +741,11 @@ function nameWords(s) {
 function matchesDpaMember(name, member) {
     const words = nameWords(name);
     if (!words.length) return false;
-    // 1) primeiro nome é a primeira palavra do nome na planilha → entra
-    if (words[0] === member.first) return true;
-    // 2) primeiro nome aparece em outra posição + algum sobrenome bate → entra
-    if (words.includes(member.first) && member.surnames.some(s => words.includes(s))) return true;
+    const keys = [member.first, ...(member.alt || [])];
+    // 1) qualquer chave é a 1ª palavra → entra (ex: "Natalino Jose" ou "Jose Natalino")
+    if (keys.some(k => words[0] === k)) return true;
+    // 2) qualquer chave aparece em qualquer posição + algum sobrenome bate → entra
+    if (keys.some(k => words.includes(k)) && member.surnames.some(s => words.includes(s))) return true;
     return false;
 }
 
