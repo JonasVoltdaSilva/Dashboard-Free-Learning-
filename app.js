@@ -427,12 +427,19 @@ function buildWeeklyChart(sector, month) {
     const empty  = document.getElementById('weekly-empty');
     if (!sector) { destroyChart('weekly'); canvas.style.display = 'none'; empty.style.display = 'flex'; return; }
 
-    let rows = allData;
+    // lastRows já carrega o filtro global de setor/mês; aplica sub-filtro de setor
+    let rows = lastRows.length ? lastRows : allData;
     if (cols.dept >= 0) rows = rows.filter(r => String(r[cols.dept] ?? '').trim() === sector);
 
-    let weekKeyFn, orderWeeks;
+    // mês efetivo: seletor da seção ou filtro global
+    const activeMonth = month || document.getElementById('filter-month')?.value || '';
+    // se a seção tem filtro de mês próprio, aplica em cima do lastRows
     if (month && cols.date >= 0) {
         rows = rows.filter(r => { const d = parseDate(r[cols.date]); return d && monthLabel(d) === month; });
+    }
+
+    let weekKeyFn, orderWeeks;
+    if (activeMonth && cols.date >= 0) {
         weekKeyFn  = d => `Semana ${Math.min(Math.ceil(d.getDate() / 7), 4)}`;
         orderWeeks = p => ['Semana 1','Semana 2','Semana 3','Semana 4'].filter(k => p.has(k));
     } else {
@@ -458,7 +465,7 @@ function buildWeeklyChart(sector, month) {
 
     // Update subtitle with real matched-record totals so user can cross-check with spreadsheet
     const wSub = document.querySelector('#card-weekly .chart-subtitle');
-    if (wSub && month) {
+    if (wSub && activeMonth) {
         const totC = rows.filter(r => cols.mode >= 0 && isModeComunique(normalizeStr(String(r[cols.mode] ?? '')))).length;
         const totO = rows.filter(r => cols.mode >= 0 && isModeObservar(normalizeStr(String(r[cols.mode] ?? '')))).length;
         wSub.textContent = `${rows.length} registros — ${totC} Comunique / ${totO} Observar`;
@@ -715,6 +722,9 @@ function initDashboard(rows, headers) {
     while (fSector.options.length > 1) fSector.remove(1);
     initial.sectors.forEach(s => fSector.add(new Option(s, s)));
 
+    const fMonth = document.getElementById('filter-month');
+    if (fMonth) { while (fMonth.options.length > 1) fMonth.remove(1); initial.months.forEach(m => fMonth.add(new Option(m, m))); }
+
     const obsSec = document.getElementById('obs-sector');
     if (obsSec) { while (obsSec.options.length > 1) obsSec.remove(1); initial.sectors.forEach(s => obsSec.add(new Option(s, s))); }
     const obsMon = document.getElementById('obs-month');
@@ -744,11 +754,13 @@ function initDashboard(rows, headers) {
     document.getElementById('dashboard-screen').classList.remove('hidden');
 }
 
-// ─── Filters (setor) ──────────────────────────────────────────────────────────
+// ─── Filters (setor + mês global) ────────────────────────────────────────────
 function applyFilters() {
     const sector = document.getElementById('filter-sector').value;
+    const month  = document.getElementById('filter-month')?.value || '';
     let filtered = allData;
     if (sector && cols.dept >= 0) filtered = filtered.filter(row => String(row[cols.dept] ?? '').trim() === sector);
+    if (month  && cols.date >= 0) filtered = filtered.filter(row => { const d = parseDate(row[cols.date]); return d && monthLabel(d) === month; });
     renderDashboard(filtered);
 }
 
@@ -906,10 +918,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // filtros
     document.getElementById('filter-sector').addEventListener('change', applyFilters);
+    document.getElementById('filter-month')?.addEventListener('change', applyFilters);
     document.getElementById('pending-sector')?.addEventListener('change', () =>
         buildPendingPanel(lastRows, document.getElementById('pending-sector').value));
     document.getElementById('clear-btn').addEventListener('click', () => {
         document.getElementById('filter-sector').value = '';
+        const fm = document.getElementById('filter-month');
+        if (fm) fm.value = '';
         renderDashboard(allData);
     });
 
