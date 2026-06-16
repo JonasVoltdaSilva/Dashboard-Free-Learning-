@@ -697,43 +697,55 @@ function animateValue(el, target) {
 }
 
 // ─── Equipe DPA ───────────────────────────────────────────────────────────────
-// tokens: TODOS precisam aparecer no nome normalizado do observador.
-// Nomes completos na planilha (ex.: "Bruno dos Anjos Ferreira") têm palavras
-// no meio, então usamos primeiro nome + sobrenome distintivo para casar certo.
+// Casamento por PRIMEIRO NOME: se o primeiro nome do colaborador for a 1ª
+// palavra do nome na planilha → entra. Os sobrenomes (surnames) servem só de
+// desempate quando dois colaboradores compartilham o mesmo primeiro nome.
 const DPA_TEAM = [
-    { display: 'Adeir Junior',       tokens: ['adeir'] },
-    { display: 'Alexandre Souza',    tokens: ['alexandre', 'souza'] },
-    { display: 'Andrey Amorim',      tokens: ['andrey'] },
-    { display: 'Bruno dos Anjos',    tokens: ['bruno', 'anjos'] },
-    { display: 'Carlos Henrique',    tokens: ['carlos', 'henrique'] },
-    { display: 'Danilo Rodrigues',   tokens: ['danilo'] },
-    { display: 'David Menezes',      tokens: ['david', 'menezes'] },
-    { display: 'Diogenes Soares',    tokens: ['diogenes'] },
-    { display: 'Edson Galvão',       tokens: ['edson'] },
-    { display: 'Fabiana Gomes',      tokens: ['fabiana'] },
-    { display: 'Fabricio Castro',    tokens: ['fabricio'] },
-    { display: 'Heitor Brito',       tokens: ['heitor'] },
-    { display: 'Hercules Oliveira',  tokens: ['hercules'] },
-    { display: 'Jhonny Rodrigues',   tokens: ['jhonny'] },
-    { display: 'Joacir Miranda',     tokens: ['joacir'] },
-    { display: 'Jose Natalino',      tokens: ['natalino'] },
-    { display: 'Jucimar Lima',       tokens: ['jucimar'] },
-    { display: 'Kauan Racis',        tokens: ['kauan'] },
-    { display: 'Leonardo Teixeira',  tokens: ['leonardo'] },
-    { display: 'Luis Carlos Bomfim', tokens: ['luis', 'bomfim'] },
-    { display: 'Maicon Cavalcante',  tokens: ['maicon'] },
-    { display: 'Marcos Antonio',     tokens: ['marcos', 'antonio'] },
-    { display: 'Mesaque Lima',       tokens: ['mesaque'] },
-    { display: 'Renan Franco',       tokens: ['renan', 'franco'] },
-    { display: 'Reginaldo Salvador', tokens: ['reginaldo'] },
-    { display: 'Renato Novaes',      tokens: ['renato', 'novaes'] },
-    { display: 'Rogerio Oliveira',   tokens: ['rogerio'] },
-    { display: 'Thalles Furmigone',  tokens: ['thalles'] },
-    { display: 'Wilson Deiro',       tokens: ['wilson', 'deiro'] },
+    { display: 'Adeir Junior',       first: 'adeir',     surnames: ['junior', 'aragao', 'nicacio'] },
+    { display: 'Alexandre Souza',    first: 'alexandre', surnames: ['silva', 'souza'] },
+    { display: 'Andrey Amorim',      first: 'andrey',    surnames: ['amorim'] },
+    { display: 'Bruno dos Anjos',    first: 'bruno',     surnames: ['anjos', 'ferreira'] },
+    { display: 'Carlos Henrique',    first: 'carlos',    surnames: ['henrique', 'ribeiro'] },
+    { display: 'Danilo Rodrigues',   first: 'danilo',    surnames: ['rodrigues'] },
+    { display: 'David Menezes',      first: 'david',     surnames: ['menezes', 'souza'] },
+    { display: 'Diogenes Soares',    first: 'diogenes',  surnames: ['almeida', 'soares'] },
+    { display: 'Edson Galvão',       first: 'edson',     surnames: ['lopes', 'galvao'] },
+    { display: 'Fabiana Gomes',      first: 'fabiana',   surnames: ['gomes'] },
+    { display: 'Fabricio Castro',    first: 'fabricio',  surnames: ['gomes', 'castro'] },
+    { display: 'Heitor Brito',       first: 'heitor',    surnames: ['brito', 'santos'] },
+    { display: 'Hercules Oliveira',  first: 'hercules',  surnames: ['oliveira'] },
+    { display: 'Jhonny Rodrigues',   first: 'jhonny',    surnames: ['deividy', 'rodrigues'] },
+    { display: 'Joacir Miranda',     first: 'joacir',    surnames: ['miranda'] },
+    { display: 'Jose Natalino',      first: 'jose',      surnames: ['natalino'] },
+    { display: 'Jucimar Lima',       first: 'jucimar',   surnames: ['lima', 'souza'] },
+    { display: 'Kauan Racis',        first: 'kauan',     surnames: ['racis'] },
+    { display: 'Leonardo Teixeira',  first: 'leonardo',  surnames: ['santana', 'teixeira'] },
+    { display: 'Luis Carlos Bomfim', first: 'luis',      surnames: ['bomfim'] },
+    { display: 'Maicon Cavalcante',  first: 'maicon',    surnames: ['cavalcante'] },
+    { display: 'Marcos Antonio',     first: 'marcos',    surnames: ['antonio'] },
+    { display: 'Mesaque Lima',       first: 'mesaque',   surnames: ['lima'] },
+    { display: 'Renan Franco',       first: 'renan',     surnames: ['franco'] },
+    { display: 'Reginaldo Salvador', first: 'reginaldo', surnames: ['salvador'] },
+    { display: 'Renato Novaes',      first: 'renato',    surnames: ['novaes'] },
+    { display: 'Rogerio Oliveira',   first: 'rogerio',   surnames: ['bruno', 'oliveira'] },
+    { display: 'Thalles Furmigone',  first: 'thalles',   surnames: ['furmigone'] },
+    { display: 'Wilson Deiro',       first: 'wilson',    surnames: ['deiro'] },
 ];
 
-function matchesDpaMember(normName, member) {
-    return member.tokens.every(t => normName.includes(t));
+// normaliza preservando espaços, p/ separar em palavras
+function nameWords(s) {
+    return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+}
+
+function matchesDpaMember(name, member) {
+    const words = nameWords(name);
+    if (!words.length) return false;
+    // 1) primeiro nome é a primeira palavra do nome na planilha → entra
+    if (words[0] === member.first) return true;
+    // 2) primeiro nome aparece em outra posição + algum sobrenome bate → entra
+    if (words.includes(member.first) && member.surnames.some(s => words.includes(s))) return true;
+    return false;
 }
 
 // ─── Render dashboard ─────────────────────────────────────────────────────────
