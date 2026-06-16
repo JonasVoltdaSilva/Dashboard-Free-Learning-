@@ -363,49 +363,26 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
     for (const row of rows) { const obs = cols.obs >= 0 ? String(row[cols.obs] ?? '').trim() : ''; if (obs) rawCnt[obs] = (rawCnt[obs] || 0) + 1; }
     const obsCnt = mergePartialNames(rawCnt);
 
+    const all    = Object.entries(obsCnt).sort((a,b) => b[1]-a[1]);
+    const total  = all.length;
     const BAR_ROW = 38;
-    const isDPA   = sectorFilter && normalizeStr(sectorFilter).includes('dpa');
-    let labels, data, colors, zeroNames, VISIBLE;
-
-    if (isDPA && cols.obs >= 0) {
-        // Show all 29 DPA team members; grey out those with 0 records
-        const dpaEntries = DPA_TEAM.map(m => {
-            const count = Object.entries(obsCnt)
-                .filter(([name]) => matchesDpaMember(normalizeStr(name), m))
-                .reduce((sum, [, cnt]) => sum + cnt, 0);
-            return { display: m.display, count };
-        }).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
-
-        labels    = dpaEntries.map(e => e.display);
-        data      = dpaEntries.map(e => e.count);
-        zeroNames = new Set(dpaEntries.filter(e => e.count === 0).map(e => e.display));
-        let ci = 0;
-        colors  = dpaEntries.map(e => e.count > 0 ? gc(ci++) : 'rgba(71,85,105,0.35)');
-        VISIBLE = dpaEntries.length;
-
-        const active = dpaEntries.filter(e => e.count > 0).length;
-        const sub = document.querySelector('#card-obs .chart-subtitle');
-        if (sub) sub.textContent = `${active} de ${DPA_TEAM.length} colaboradores com registros`;
-    } else {
-        const all = Object.entries(obsCnt).sort((a, b) => b[1] - a[1]);
-        labels    = all.map(([k]) => k.length > 30 ? k.slice(0, 30) + '…' : k);
-        data      = all.map(([, v]) => v);
-        colors    = data.map((_, i) => gc(i));
-        zeroNames = new Set();
-        VISIBLE   = 10;
-        const total = all.length;
-        const sub = document.querySelector('#card-obs .chart-subtitle');
-        if (sub) sub.textContent = total > VISIBLE
-            ? `Top ${VISIBLE} visíveis de ${total} — role para ver mais`
-            : `${total} observador${total !== 1 ? 'es' : ''}`;
-    }
+    const VISIBLE = 10;
+    const sorted = all;
+    const labels = sorted.map(([k]) => k.length > 30 ? k.slice(0,30)+'…' : k);
+    const data   = sorted.map(([,v]) => v);
+    const colors = data.map((_,i) => gc(i));
 
     destroyChart('obs');
     const canvas = document.getElementById('obs-chart');
     const wrap   = document.getElementById('obs-chart-wrap');
     const inner  = document.getElementById('obs-chart-inner');
 
-    if (labels.length === 0) {
+    const sub = document.querySelector('#card-obs .chart-subtitle');
+    if (sub) sub.textContent = total > VISIBLE
+        ? `Top ${VISIBLE} visíveis de ${total} — role para ver mais`
+        : `${total} observador${total !== 1 ? 'es' : ''}`;
+
+    if (sorted.length === 0) {
         inner.style.display = 'none';
         if (!wrap.querySelector('.obs-empty')) {
             const msg = document.createElement('div');
@@ -418,8 +395,8 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
     }
     wrap.querySelector('.obs-empty')?.remove();
 
-    const canvasH = labels.length * BAR_ROW + 24;
-    const wrapH   = Math.min(labels.length, VISIBLE) * BAR_ROW + 24;
+    const canvasH = sorted.length * BAR_ROW + 24;
+    const wrapH   = Math.min(sorted.length, VISIBLE) * BAR_ROW + 24;
     inner.style.display = 'block';
     inner.style.height  = canvasH + 'px';
     wrap.style.height   = wrapH + 'px';
@@ -438,8 +415,7 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
                 y: { grid: { color: 'transparent' }, border: { color: 'transparent' },
-                     ticks: { color: ctx => zeroNames.has(ctx.tick.label) ? 'rgba(100,116,139,0.45)' : '#e2e8f0',
-                              font: { size: 12, weight: '500' }, padding: 8 } },
+                     ticks: { color: '#e2e8f0', font: { size: 12, weight: '500' }, padding: 8 } },
             },
         },
     });
@@ -694,59 +670,6 @@ function animateValue(el, target) {
         if (t < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
-}
-
-// ─── Equipe DPA ───────────────────────────────────────────────────────────────
-// Casamento por PRIMEIRO NOME: se o primeiro nome do colaborador for a 1ª
-// palavra do nome na planilha → entra. Os sobrenomes (surnames) servem só de
-// desempate quando dois colaboradores compartilham o mesmo primeiro nome.
-const DPA_TEAM = [
-    { display: 'Adeir Junior',       first: 'adeir',     surnames: ['junior', 'aragao', 'nicacio'] },
-    { display: 'Alexandre Souza',    first: 'alexandre', surnames: ['silva', 'souza'] },
-    { display: 'Andrey Amorim',      first: 'andrey',    surnames: ['amorim'] },
-    { display: 'Bruno dos Anjos',    first: 'bruno',     surnames: ['anjos', 'ferreira'] },
-    { display: 'Carlos Henrique',    first: 'carlos',    surnames: ['henrique', 'ribeiro'] },
-    { display: 'Danilo Rodrigues',   first: 'danilo',    surnames: ['rodrigues'] },
-    { display: 'David Menezes',      first: 'david',     surnames: ['menezes', 'souza'] },
-    { display: 'Diogenes Soares',    first: 'diogenes',  surnames: ['almeida', 'soares'] },
-    { display: 'Edson Galvão',       first: 'edson',     surnames: ['lopes', 'galvao'] },
-    { display: 'Fabiana Gomes',      first: 'fabiana',   surnames: ['gomes'] },
-    { display: 'Fabricio Castro',    first: 'fabricio',  surnames: ['gomes', 'castro'] },
-    { display: 'Heitor Brito',       first: 'heitor',    surnames: ['brito', 'santos'] },
-    { display: 'Hercules Oliveira',  first: 'hercules',  surnames: ['oliveira'] },
-    { display: 'Jhonny Rodrigues',   first: 'jhonny',    surnames: ['deividy', 'rodrigues'] },
-    { display: 'Joacir Miranda',     first: 'joacir',    surnames: ['miranda'] },
-    { display: 'Jose Natalino',      first: 'jose',      alt: ['natalino'], surnames: ['natalino'] },
-    { display: 'Jucimar Lima',       first: 'jucimar',   surnames: ['lima', 'souza'] },
-    { display: 'Kauan Racis',        first: 'kauan',     surnames: ['racis'] },
-    { display: 'Leonardo Teixeira',  first: 'leonardo',  surnames: ['santana', 'teixeira'] },
-    { display: 'Luis Carlos Bomfim', first: 'luis',      surnames: ['bomfim'] },
-    { display: 'Maicon Cavalcante',  first: 'maicon',    surnames: ['cavalcante'] },
-    { display: 'Marcos Antonio',     first: 'marcos',    surnames: ['antonio'] },
-    { display: 'Mesaque Lima',       first: 'mesaque',   surnames: ['lima'] },
-    { display: 'Renan Franco',       first: 'renan',     surnames: ['franco'] },
-    { display: 'Reginaldo Salvador', first: 'reginaldo', surnames: ['salvador'] },
-    { display: 'Renato Novaes',      first: 'renato',    surnames: ['novaes'] },
-    { display: 'Rogerio Oliveira',   first: 'rogerio',   surnames: ['bruno', 'oliveira'] },
-    { display: 'Thalles Furmigone',  first: 'thalles',   surnames: ['furmigone'] },
-    { display: 'Wilson Deiro',       first: 'wilson',    surnames: ['deiro'] },
-];
-
-// normaliza preservando espaços, p/ separar em palavras
-function nameWords(s) {
-    return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
-}
-
-function matchesDpaMember(name, member) {
-    const words = nameWords(name);
-    if (!words.length) return false;
-    const keys = [member.first, ...(member.alt || [])];
-    // 1) qualquer chave é a 1ª palavra → entra (ex: "Natalino Jose" ou "Jose Natalino")
-    if (keys.some(k => words[0] === k)) return true;
-    // 2) qualquer chave aparece em qualquer posição + algum sobrenome bate → entra
-    if (keys.some(k => words.includes(k)) && member.surnames.some(s => words.includes(s))) return true;
-    return false;
 }
 
 // ─── Render dashboard ─────────────────────────────────────────────────────────
