@@ -371,7 +371,7 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
         // Show all 29 DPA team members; grey out those with 0 records
         const dpaEntries = DPA_TEAM.map(m => {
             const count = Object.entries(obsCnt)
-                .filter(([name]) => normalizeStr(name).includes(m.search))
+                .filter(([name]) => matchesDpaMember(normalizeStr(name), m))
                 .reduce((sum, [, cnt]) => sum + cnt, 0);
             return { display: m.display, count };
         }).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
@@ -697,37 +697,44 @@ function animateValue(el, target) {
 }
 
 // ─── Equipe DPA ───────────────────────────────────────────────────────────────
+// tokens: TODOS precisam aparecer no nome normalizado do observador.
+// Nomes completos na planilha (ex.: "Bruno dos Anjos Ferreira") têm palavras
+// no meio, então usamos primeiro nome + sobrenome distintivo para casar certo.
 const DPA_TEAM = [
-    { display: 'Adeir Junior',       search: 'adeir' },
-    { display: 'Alexandre Souza',    search: 'alexandre' },
-    { display: 'Andrey Amorim',      search: 'andrey' },
-    { display: 'Bruno Ferreira',     search: 'brunoferreira' },
-    { display: 'Carlos Ribeiro',     search: 'carloshenrique' },
-    { display: 'Danilo Rodrigues',   search: 'danilo' },
-    { display: 'David Menezes',      search: 'david' },
-    { display: 'Diogenes Soares',    search: 'diogenes' },
-    { display: 'Edson Galvão',       search: 'edson' },
-    { display: 'Fabiana Gomes',      search: 'fabiana' },
-    { display: 'Fabricio Castro',    search: 'fabricio' },
-    { display: 'Heitor Santos',      search: 'heitor' },
-    { display: 'Hercules Oliveira',  search: 'hercules' },
-    { display: 'Jhonny Rodrigues',   search: 'jhonny' },
-    { display: 'Joacir Miranda',     search: 'joacir' },
-    { display: 'Jose Natalino',      search: 'natalino' },
-    { display: 'Jucimar Souza',      search: 'jucimar' },
-    { display: 'Kauan Racis',        search: 'kauan' },
-    { display: 'Leonardo Teixeira',  search: 'leonardo' },
-    { display: 'Luis Bomfim',        search: 'luisbomfim' },
-    { display: 'Maicon Cavalcante',  search: 'maicon' },
-    { display: 'Marcos Antonio',     search: 'marcos' },
-    { display: 'Mesaque Lima',       search: 'mesaque' },
-    { display: 'Renan Franco',       search: 'renan' },
-    { display: 'Reginaldo Salvador', search: 'reginaldo' },
-    { display: 'Renato Novaes',      search: 'renato' },
-    { display: 'Rogerio Oliveira',   search: 'rogerio' },
-    { display: 'Thalles Furmigone',  search: 'thalles' },
-    { display: 'Wilson Deiro',       search: 'wilson' },
+    { display: 'Adeir Junior',       tokens: ['adeir'] },
+    { display: 'Alexandre Souza',    tokens: ['alexandre', 'souza'] },
+    { display: 'Andrey Amorim',      tokens: ['andrey'] },
+    { display: 'Bruno dos Anjos',    tokens: ['bruno', 'anjos'] },
+    { display: 'Carlos Henrique',    tokens: ['carlos', 'henrique'] },
+    { display: 'Danilo Rodrigues',   tokens: ['danilo'] },
+    { display: 'David Menezes',      tokens: ['david', 'menezes'] },
+    { display: 'Diogenes Soares',    tokens: ['diogenes'] },
+    { display: 'Edson Galvão',       tokens: ['edson'] },
+    { display: 'Fabiana Gomes',      tokens: ['fabiana'] },
+    { display: 'Fabricio Castro',    tokens: ['fabricio'] },
+    { display: 'Heitor Brito',       tokens: ['heitor'] },
+    { display: 'Hercules Oliveira',  tokens: ['hercules'] },
+    { display: 'Jhonny Rodrigues',   tokens: ['jhonny'] },
+    { display: 'Joacir Miranda',     tokens: ['joacir'] },
+    { display: 'Jose Natalino',      tokens: ['natalino'] },
+    { display: 'Jucimar Lima',       tokens: ['jucimar'] },
+    { display: 'Kauan Racis',        tokens: ['kauan'] },
+    { display: 'Leonardo Teixeira',  tokens: ['leonardo'] },
+    { display: 'Luis Carlos Bomfim', tokens: ['luis', 'bomfim'] },
+    { display: 'Maicon Cavalcante',  tokens: ['maicon'] },
+    { display: 'Marcos Antonio',     tokens: ['marcos', 'antonio'] },
+    { display: 'Mesaque Lima',       tokens: ['mesaque'] },
+    { display: 'Renan Franco',       tokens: ['renan', 'franco'] },
+    { display: 'Reginaldo Salvador', tokens: ['reginaldo'] },
+    { display: 'Renato Novaes',      tokens: ['renato', 'novaes'] },
+    { display: 'Rogerio Oliveira',   tokens: ['rogerio'] },
+    { display: 'Thalles Furmigone',  tokens: ['thalles'] },
+    { display: 'Wilson Deiro',       tokens: ['wilson', 'deiro'] },
 ];
+
+function matchesDpaMember(normName, member) {
+    return member.tokens.every(t => normName.includes(t));
+}
 
 // ─── Render dashboard ─────────────────────────────────────────────────────────
 function renderDashboard(rows) {
