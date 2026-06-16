@@ -677,6 +677,69 @@ function animateValue(el, target) {
     requestAnimationFrame(step);
 }
 
+// ─── Equipe DPA ───────────────────────────────────────────────────────────────
+const DPA_TEAM = [
+    { display: 'Adeir Junior',       search: 'adeir' },
+    { display: 'Alexandre Souza',    search: 'alexandre' },
+    { display: 'Andrey Amorim',      search: 'andrey' },
+    { display: 'Bruno Ferreira',     search: 'brunoferreira' },
+    { display: 'Carlos Ribeiro',     search: 'carloshenrique' },
+    { display: 'Danilo Rodrigues',   search: 'danilo' },
+    { display: 'David Menezes',      search: 'david' },
+    { display: 'Diogenes Soares',    search: 'diogenes' },
+    { display: 'Edson Galvão',       search: 'edson' },
+    { display: 'Fabiana Gomes',      search: 'fabiana' },
+    { display: 'Fabricio Castro',    search: 'fabricio' },
+    { display: 'Heitor Santos',      search: 'heitor' },
+    { display: 'Hercules Oliveira',  search: 'hercules' },
+    { display: 'Jhonny Rodrigues',   search: 'jhonny' },
+    { display: 'Joacir Miranda',     search: 'joacir' },
+    { display: 'Jose Natalino',      search: 'natalino' },
+    { display: 'Jucimar Souza',      search: 'jucimar' },
+    { display: 'Kauan Racis',        search: 'kauan' },
+    { display: 'Leonardo Teixeira',  search: 'leonardo' },
+    { display: 'Luis Bomfim',        search: 'luisbomfim' },
+    { display: 'Maicon Cavalcante',  search: 'maicon' },
+    { display: 'Marcos Antonio',     search: 'marcos' },
+    { display: 'Mesaque Lima',       search: 'mesaque' },
+    { display: 'Renan Franco',       search: 'renan' },
+    { display: 'Reginaldo Salvador', search: 'reginaldo' },
+    { display: 'Renato Novaes',      search: 'renato' },
+    { display: 'Rogerio Oliveira',   search: 'rogerio' },
+    { display: 'Thalles Furmigone',  search: 'thalles' },
+    { display: 'Wilson Deiro',       search: 'wilson' },
+];
+
+function buildDpaTeamPanel(rows) {
+    const rowEl = document.getElementById('row-dpa-team');
+    const body  = document.getElementById('dpa-team-body');
+    const sub   = document.getElementById('dpa-team-subtitle');
+    if (!rowEl || !body) return;
+    if (cols.obs < 0) { rowEl.classList.add('hidden'); return; }
+    rowEl.classList.remove('hidden');
+
+    const counts = DPA_TEAM.map(m => {
+        const count = rows.filter(r => {
+            const obs = normalizeStr(String(r[cols.obs] ?? ''));
+            return obs.includes(m.search);
+        }).length;
+        return { ...m, count };
+    }).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
+
+    const max = counts[0]?.count || 1;
+    const active = counts.filter(m => m.count > 0).length;
+    if (sub) sub.textContent = `${active} de ${DPA_TEAM.length} colaboradores com registros`;
+
+    body.innerHTML = `<div class="dpa-list">${counts.map(m => `
+        <div class="dpa-row${m.count === 0 ? ' dpa-row--zero' : ''}">
+            <span class="dpa-name">${escapeHtml(m.display)}</span>
+            <div class="dpa-bar-wrap">
+                <div class="dpa-bar" style="width:${m.count > 0 ? Math.max(3, (m.count / max) * 100) : 0}%"></div>
+            </div>
+            <span class="dpa-count">${m.count}</span>
+        </div>`).join('')}</div>`;
+}
+
 // ─── Render dashboard ─────────────────────────────────────────────────────────
 function renderDashboard(rows) {
     lastRows = rows;
@@ -690,6 +753,7 @@ function renderDashboard(rows) {
     renderKpi('unclassified', d.unclassified);
 
     buildPendingPanel(rows, document.getElementById('pending-sector')?.value || '');
+    buildDpaTeamPanel(rows);
     buildDeptChart(d.deptCnt);
     buildStackedChart(d.typeByDept, d.typeCnt);
     buildTable(rows);

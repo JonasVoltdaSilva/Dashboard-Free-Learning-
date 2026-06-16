@@ -256,6 +256,56 @@
           </div>
         </div>
 
+        <div class="kpi-card kpi-card--blue">
+          <div class="kpi-glow"></div>
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+          </div>
+          <div class="kpi-card-bottom">
+            <p class="kpi-label">Sem Classificação</p>
+            <p class="kpi-value" id="kpi-unclassified">0</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Row: Classificação Pendente -->
+      <div class="chart-row chart-row--full hidden" id="row-pending">
+        <div class="chart-card" id="card-pending">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Classificação Pendente</div>
+              <div class="chart-subtitle" id="pending-subtitle">Registros aguardando atribuição de tipo</div>
+            </div>
+            <div class="chart-head-right">
+              <select class="chart-filter-select" id="pending-sector">
+                <option value="">Selecione o setor...</option>
+                <option value="ALL">Todos os setores</option>
+              </select>
+            </div>
+          </div>
+          <div id="pending-body"></div>
+        </div>
+      </div>
+
+      <!-- Row: Equipe DPA -->
+      <div class="chart-row chart-row--full hidden" id="row-dpa-team">
+        <div class="chart-card" id="card-dpa-team">
+          <div class="chart-head">
+            <div class="chart-head-left">
+              <div class="chart-title">Equipe DPA</div>
+              <div class="chart-subtitle" id="dpa-team-subtitle">Comuniques e observações por colaborador</div>
+            </div>
+            <span class="badge badge--blue">EQUIPE</span>
+          </div>
+          <div id="dpa-team-body"></div>
+        </div>
       </div>
 
       <!-- Row: Dept Bar (full width) — clique filtra o setor -->
@@ -476,6 +526,6 @@
   </div>
 </div>
 
-<script src="app.js?v=39"></script>
+<script src="app.js?v=40"></script>
 </body>
 </html>

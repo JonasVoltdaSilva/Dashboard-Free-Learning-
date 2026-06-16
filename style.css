@@ -1263,6 +1263,56 @@ body.light .badge--orange{ background: rgba(245,158,11,0.1); color: #b45309; bor
 body.light .badge--indigo{ background: rgba(99,102,241,0.1); color: #4338ca; border-color: rgba(99,102,241,0.25); }
 body.light .data-table thead th { position: sticky; }
 
+/* ═══════════════════════════════════════════════ DPA TEAM PANEL */
+.dpa-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.25rem 0;
+}
+
+.dpa-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 36px;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.28rem 0;
+}
+
+.dpa-row--zero { opacity: 0.38; }
+
+.dpa-name {
+    font-size: 0.8rem;
+    color: #e2e8f0;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dpa-bar-wrap {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.dpa-bar {
+    height: 100%;
+    background: var(--accent, #3b82f6);
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.dpa-count {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #93c5fd;
+    text-align: right;
+}
+
+.dpa-row--zero .dpa-count { color: #334155; }
+
 /* ═══════════════════════════════════════════════ PENDING PANEL */
 .pending-ok {
     display: flex;
