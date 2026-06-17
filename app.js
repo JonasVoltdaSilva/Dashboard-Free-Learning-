@@ -363,26 +363,47 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
     for (const row of rows) { const obs = cols.obs >= 0 ? String(row[cols.obs] ?? '').trim() : ''; if (obs) rawCnt[obs] = (rawCnt[obs] || 0) + 1; }
     const obsCnt = mergePartialNames(rawCnt);
 
-    const all    = Object.entries(obsCnt).sort((a,b) => b[1]-a[1]);
-    const total  = all.length;
     const BAR_ROW = 38;
-    const VISIBLE = 10;
-    const sorted = all;
-    const labels = sorted.map(([k]) => k.length > 30 ? k.slice(0,30)+'…' : k);
-    const data   = sorted.map(([,v]) => v);
-    const colors = data.map((_,i) => gc(i));
+    const isDPA = sectorFilter && normalizeStr(sectorFilter).includes('dpa');
+    let labels, data, colors, VISIBLE;
+
+    if (isDPA && cols.obs >= 0) {
+        const entries = DPA_TEAM.map(m => {
+            const count = Object.entries(obsCnt)
+                .filter(([name]) => matchesDpaMember(name, m))
+                .reduce((sum, [, c]) => sum + c, 0);
+            return { display: m.display, count };
+        }).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
+
+        labels  = entries.map(e => e.display);
+        data    = entries.map(e => e.count);
+        let ci  = 0;
+        colors  = entries.map(e => e.count > 0 ? gc(ci++) : 'rgba(71,85,105,0.35)');
+        VISIBLE = entries.length;
+
+        const active = entries.filter(e => e.count > 0).length;
+        const sub = document.querySelector('#card-obs .chart-subtitle');
+        if (sub) sub.textContent = `${active} de ${DPA_TEAM.length} colaboradores com registros`;
+    } else {
+        const all  = Object.entries(obsCnt).sort((a, b) => b[1] - a[1]);
+        const total = all.length;
+        labels  = all.map(([k]) => k.length > 30 ? k.slice(0, 30) + '…' : k);
+        data    = all.map(([, v]) => v);
+        colors  = data.map((_, i) => gc(i));
+        VISIBLE = 10;
+
+        const sub = document.querySelector('#card-obs .chart-subtitle');
+        if (sub) sub.textContent = total > VISIBLE
+            ? `Top ${VISIBLE} visíveis de ${total} — role para ver mais`
+            : `${total} observador${total !== 1 ? 'es' : ''}`;
+    }
 
     destroyChart('obs');
     const canvas = document.getElementById('obs-chart');
     const wrap   = document.getElementById('obs-chart-wrap');
     const inner  = document.getElementById('obs-chart-inner');
 
-    const sub = document.querySelector('#card-obs .chart-subtitle');
-    if (sub) sub.textContent = total > VISIBLE
-        ? `Top ${VISIBLE} visíveis de ${total} — role para ver mais`
-        : `${total} observador${total !== 1 ? 'es' : ''}`;
-
-    if (sorted.length === 0) {
+    if (labels.length === 0) {
         inner.style.display = 'none';
         if (!wrap.querySelector('.obs-empty')) {
             const msg = document.createElement('div');
@@ -395,8 +416,10 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
     }
     wrap.querySelector('.obs-empty')?.remove();
 
-    const canvasH = sorted.length * BAR_ROW + 24;
-    const wrapH   = Math.min(sorted.length, VISIBLE) * BAR_ROW + 24;
+    const zeroSet = new Set(labels.filter((l, i) => data[i] === 0));
+
+    const canvasH = labels.length * BAR_ROW + 24;
+    const wrapH   = Math.min(labels.length, VISIBLE) * BAR_ROW + 24;
     inner.style.display = 'block';
     inner.style.height  = canvasH + 'px';
     wrap.style.height   = wrapH + 'px';
@@ -415,7 +438,8 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
             scales: {
                 x: { ...SCALE_OPTS.x, ticks: { ...SCALE_OPTS.x.ticks, maxTicksLimit: 6 } },
                 y: { grid: { color: 'transparent' }, border: { color: 'transparent' },
-                     ticks: { color: '#e2e8f0', font: { size: 12, weight: '500' }, padding: 8 } },
+                     ticks: { color: ctx => zeroSet.has(ctx.tick.label) ? 'rgba(100,116,139,0.45)' : '#e2e8f0',
+                              font: { size: 12, weight: '500' }, padding: 8 } },
             },
         },
     });
@@ -677,6 +701,53 @@ function animateValue(el, target) {
         if (t < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
+}
+
+// ─── Equipe DPA ───────────────────────────────────────────────────────────────
+const DPA_TEAM = [
+    { display: 'Adeir',      first: 'adeir',     surnames: ['junior', 'aragao', 'nicacio'] },
+    { display: 'Alexandre',  first: 'alexandre', surnames: ['silva', 'souza'] },
+    { display: 'Andrey',     first: 'andrey',    surnames: ['antonio', 'amorim'] },
+    { display: 'Bruno',      first: 'bruno',     surnames: ['anjos', 'ferreira'] },
+    { display: 'Carlos',     first: 'carlos',    surnames: ['henrique', 'ribeiro', 'silva'] },
+    { display: 'Danilo',     first: 'danilo',    surnames: ['rodrigues', 'silva'] },
+    { display: 'David',      first: 'david',     surnames: ['menezes', 'souza'] },
+    { display: 'Diogenes',   first: 'diogenes',  surnames: ['almeida', 'soares'] },
+    { display: 'Edson',      first: 'edson',     surnames: ['lopes', 'galvao'] },
+    { display: 'Fabiana',    first: 'fabiana',   surnames: ['gomes', 'silva'] },
+    { display: 'Fabricio',   first: 'fabricio',  surnames: ['gomes', 'castro'] },
+    { display: 'Heitor',     first: 'heitor',    surnames: ['brito', 'santos'] },
+    { display: 'Hercules',   first: 'hercules',  surnames: ['oliveira'] },
+    { display: 'Jhonny',     first: 'jhonny',    surnames: ['deividy', 'rodrigues', 'oliveira'] },
+    { display: 'Joacir',     first: 'joacir',    surnames: ['silva', 'miranda'] },
+    { display: 'Jose',       first: 'jose',      alt: ['natalino'], surnames: ['natalino', 'silva'] },
+    { display: 'Jucimar',    first: 'jucimar',   surnames: ['lima', 'souza'] },
+    { display: 'Kauan',      first: 'kauan',     surnames: ['racis', 'silva'] },
+    { display: 'Leonardo',   first: 'leonardo',  surnames: ['santana', 'teixeira'] },
+    { display: 'Luis',       first: 'luis',      alt: ['luiz'], surnames: ['carlos', 'ferreira', 'bomfim'] },
+    { display: 'Maicon',     first: 'maicon',    surnames: ['jhon', 'cavalcante', 'alves'] },
+    { display: 'Marcos',     first: 'marcos',    surnames: ['antonio', 'silva'] },
+    { display: 'Mesaque',    first: 'mesaque',   surnames: ['ferreira', 'lima'] },
+    { display: 'Renan',      first: 'renan',     surnames: ['santos', 'franco'] },
+    { display: 'Reginaldo',  first: 'reginaldo', surnames: ['salvador'] },
+    { display: 'Renato',     first: 'renato',    surnames: ['rodrigues', 'novaes'] },
+    { display: 'Rogerio',    first: 'rogerio',   surnames: ['bruno', 'oliveira'] },
+    { display: 'Thalles',    first: 'thalles',   surnames: ['otavio', 'furmigone', 'souza'] },
+    { display: 'Wilson',     first: 'wilson',    surnames: ['santos', 'deiro'] },
+];
+
+function nameWords(s) {
+    return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+}
+
+function matchesDpaMember(name, member) {
+    const words = nameWords(name);
+    if (!words.length) return false;
+    const keys = [member.first, ...(member.alt || [])];
+    if (keys.some(k => words[0] === k)) return true;
+    if (keys.some(k => words.includes(k)) && member.surnames.some(s => words.includes(s))) return true;
+    return false;
 }
 
 // ─── Render dashboard ─────────────────────────────────────────────────────────
