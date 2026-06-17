@@ -300,16 +300,7 @@ function renderKpi(id, value) {
 
 // ─── Dept Bar Chart (com drill-down por clique) ───────────────────────────────
 function buildDeptChart(rows) {
-    const monFilter = document.getElementById('dept-month')?.value || '';
-    let filtered = rows;
-    if (monFilter && cols.date >= 0) filtered = filtered.filter(r => { const d = parseDate(r[cols.date]); return d && monthLabel(d) === monFilter; });
-
-    const deptCnt = {};
-    for (const row of filtered) {
-        const dept = cols.dept >= 0 ? String(row[cols.dept] ?? '').trim() : '';
-        if (dept) deptCnt[dept] = (deptCnt[dept] || 0) + 1;
-    }
-
+    const { deptCnt } = aggregate(rows);
     const sorted = topCount(Object.entries(deptCnt).sort((a,b) => b[1]-a[1]));
     const names  = sorted.map(([k]) => k);
     const labels = names.map(k => k.length > 18 ? k.slice(0,18)+'…' : k);
@@ -397,12 +388,14 @@ function buildObsChart(sectorFilter, modeFilter, monthFilter) {
         const totObs = entries.reduce((s, e) => s + e.count, 0);
         if (sub) sub.textContent = `${active} de ${DPA_TEAM.length} colaboradores — ${totObs} registros (meta: 78 obs / 20 com)`;
     } else {
-        const all  = Object.entries(obsCnt).sort((a, b) => b[1] - a[1]);
+        const all   = Object.entries(obsCnt).sort((a, b) => b[1] - a[1]);
         const total = all.length;
         labels  = all.map(([k]) => k.length > 30 ? k.slice(0, 30) + '…' : k);
         data    = all.map(([, v]) => v);
         colors  = data.map((_, i) => gc(i));
-        VISIBLE = total; // mostra todos sem scroll
+        // setor selecionado → mostra todos; sem setor → top 10
+        const hasSector = !!(sectorFilter || globalSector);
+        VISIBLE = hasSector ? total : Math.min(total, 10);
 
         const sub = document.querySelector('#card-obs .chart-subtitle');
         if (sub) sub.textContent = total > VISIBLE
@@ -543,15 +536,7 @@ function buildStackedChart(rows) {
     if (secFilter && cols.dept >= 0) filtered = filtered.filter(r => String(r[cols.dept] ?? '').trim() === secFilter);
     if (monFilter && cols.date >= 0) filtered = filtered.filter(r => { const d = parseDate(r[cols.date]); return d && monthLabel(d) === monFilter; });
 
-    const typeByDept = {}, typeCnt = {};
-    for (const row of filtered) {
-        const dept = cols.dept >= 0 ? String(row[cols.dept] ?? '').trim() : '';
-        const type = cols.type >= 0 ? String(row[cols.type] ?? '').trim() : '';
-        if (!dept || !type) continue;
-        if (!typeByDept[dept]) typeByDept[dept] = {};
-        typeByDept[dept][type] = (typeByDept[dept][type] || 0) + 1;
-        typeCnt[type] = (typeCnt[type] || 0) + 1;
-    }
+    const { typeByDept, typeCnt } = aggregate(filtered);
 
     const depts = topCount(Object.keys(typeByDept).sort((a, b) => {
         const sa = Object.values(typeByDept[a]).reduce((x,y) => x+y, 0);
@@ -855,9 +840,6 @@ function initDashboard(rows, headers) {
         initial.sectors.forEach(s => pendingSec.add(new Option(s, s)));
     }
 
-    const deptMon = document.getElementById('dept-month');
-    if (deptMon) { while (deptMon.options.length > 1) deptMon.remove(1); initial.months.forEach(m => deptMon.add(new Option(m, m))); }
-
     const stackedMon = document.getElementById('stacked-month');
     const stackedSec = document.getElementById('stacked-sector');
     if (stackedMon) { while (stackedMon.options.length > 1) stackedMon.remove(1); initial.months.forEach(m => stackedMon.add(new Option(m, m))); }
@@ -1050,8 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // tabela: busca
     document.getElementById('table-search').addEventListener('input', () => buildTable(lastRows));
 
-    // dept + stacked sub-filtros
-    document.getElementById('dept-month')?.addEventListener('change', () => buildDeptChart(lastRows));
+    // stacked sub-filtros
     document.getElementById('stacked-month')?.addEventListener('change', () => buildStackedChart(lastRows));
     document.getElementById('stacked-sector')?.addEventListener('change', () => buildStackedChart(lastRows));
 
