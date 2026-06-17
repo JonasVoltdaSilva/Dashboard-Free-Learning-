@@ -499,26 +499,26 @@ function buildWeeklyChart(sector, month) {
     if (labels.length === 0) { destroyChart('weekly'); canvas.style.display = 'none'; empty.style.display = 'flex'; return; }
     canvas.style.display = 'block'; empty.style.display = 'none';
 
-    // Update subtitle with real matched-record totals so user can cross-check with spreadsheet
-    const wSub = document.querySelector('#card-weekly .chart-subtitle');
-    if (wSub && activeMonth) {
-        const totC = rows.filter(r => cols.mode >= 0 && isModeComunique(normalizeStr(String(r[cols.mode] ?? '')))).length;
-        const totO = rows.filter(r => cols.mode >= 0 && isModeObservar(normalizeStr(String(r[cols.mode] ?? '')))).length;
-        wSub.textContent = `${rows.length} registros — ${totC} Comunique / ${totO} Observar`;
-    }
+    const totC = rows.filter(r => cols.mode >= 0 && isModeComunique(normalizeStr(String(r[cols.mode] ?? '')))).length;
+    const totO = rows.filter(r => cols.mode >= 0 && isModeObservar(normalizeStr(String(r[cols.mode] ?? '')))).length;
 
     const cor = SETTINGS.colorblind ? ['#0072b2','#e69f00','#999999'] : ['#3b82f6','#10b981','#f59e0b'];
     const isDPAWeekly = normalizeStr(sector || document.getElementById('filter-sector')?.value || '').includes('dpa');
-    const metaCom = isDPAWeekly ? 20 : 20;
-    const metaObs = isDPAWeekly ? 78 : 19;
+
+    // Subtítulo: mostra total acumulado vs meta
+    const wSub = document.querySelector('#card-weekly .chart-subtitle');
+    if (wSub) {
+        if (isDPAWeekly) {
+            wSub.textContent = `Comunique: ${totC} / meta ${20} | Observar: ${totO} / meta ${78}`;
+        } else if (activeMonth) {
+            wSub.textContent = `${rows.length} registros — ${totC} Comunique / ${totO} Observar`;
+        }
+    }
+
     const datasets = [
         { label: 'Comunique', data: labels.map(w => counts[w].comunique), backgroundColor: cor[0], borderRadius: 6, borderSkipped: false },
         { label: 'Observar',  data: labels.map(w => counts[w].observar),  backgroundColor: cor[1], borderRadius: 6, borderSkipped: false },
         { label: 'Outros',    data: labels.map(w => counts[w].outros),    backgroundColor: cor[2], borderRadius: 6, borderSkipped: false },
-        { label: `Meta Comunique (${metaCom})`, data: labels.map(() => metaCom), type: 'line',
-          borderColor: cor[0], borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0 },
-        { label: `Meta Observar (${metaObs})`,  data: labels.map(() => metaObs),  type: 'line',
-          borderColor: cor[1], borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0 },
     ];
 
     destroyChart('weekly');
