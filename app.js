@@ -859,9 +859,23 @@ function initDashboard(rows, headers) {
 function applyFilters() {
     const sector = document.getElementById('filter-sector').value;
     const month  = document.getElementById('filter-month')?.value || '';
+    const dStart = document.getElementById('filter-date-start')?.value || '';
+    const dEnd   = document.getElementById('filter-date-end')?.value || '';
     let filtered = allData;
     if (sector && cols.dept >= 0) filtered = filtered.filter(row => String(row[cols.dept] ?? '').trim() === sector);
     if (month  && cols.date >= 0) filtered = filtered.filter(row => { const d = parseDate(row[cols.date]); return d && monthLabel(d) === month; });
+    if ((dStart || dEnd) && cols.date >= 0) {
+        // datas do input <type=date> vêm como "YYYY-MM-DD"; compara por dia
+        const start = dStart ? new Date(dStart + 'T00:00:00') : null;
+        const end   = dEnd   ? new Date(dEnd   + 'T00:00:00') : null;
+        filtered = filtered.filter(row => {
+            const d = parseDate(row[cols.date]);
+            if (!d) return false;
+            if (start && d < start) return false;
+            if (end   && d > end)   return false;
+            return true;
+        });
+    }
     renderDashboard(filtered);
 }
 
@@ -1020,12 +1034,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // filtros
     document.getElementById('filter-sector').addEventListener('change', applyFilters);
     document.getElementById('filter-month')?.addEventListener('change', applyFilters);
+    document.getElementById('filter-date-start')?.addEventListener('change', applyFilters);
+    document.getElementById('filter-date-end')?.addEventListener('change', applyFilters);
     document.getElementById('pending-sector')?.addEventListener('change', () =>
         buildPendingPanel(lastRows, document.getElementById('pending-sector').value));
     document.getElementById('clear-btn').addEventListener('click', () => {
         document.getElementById('filter-sector').value = '';
         const fm = document.getElementById('filter-month');
         if (fm) fm.value = '';
+        const ds = document.getElementById('filter-date-start');
+        const de = document.getElementById('filter-date-end');
+        if (ds) ds.value = '';
+        if (de) de.value = '';
         renderDashboard(allData);
     });
 
