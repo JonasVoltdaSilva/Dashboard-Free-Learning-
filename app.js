@@ -349,6 +349,20 @@ function mergePartialNames(cnt) {
 function buildObsChart(sectorFilter, modeFilter, monthFilter) {
     let rows = lastRows.length ? lastRows : allData;
     if (monthFilter && cols.date >= 0) rows = rows.filter(r => { const d = parseDate(r[cols.date]); return d && monthLabel(d) === monthFilter; });
+    // intervalo de datas próprio do painel de observadores
+    const oStart = document.getElementById('obs-date-start')?.value || '';
+    const oEnd   = document.getElementById('obs-date-end')?.value || '';
+    if ((oStart || oEnd) && cols.date >= 0) {
+        const start = oStart ? new Date(oStart + 'T00:00:00') : null;
+        const end   = oEnd   ? new Date(oEnd   + 'T00:00:00') : null;
+        rows = rows.filter(r => {
+            const d = parseDate(r[cols.date]);
+            if (!d) return false;
+            if (start && d < start) return false;
+            if (end   && d > end)   return false;
+            return true;
+        });
+    }
     if (sectorFilter && cols.dept >= 0) rows = rows.filter(r => String(r[cols.dept] ?? '').trim() === sectorFilter);
     if (modeFilter && cols.mode >= 0) {
         const mf = normalizeStr(modeFilter);
@@ -1065,6 +1079,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('obs-sector')?.addEventListener('change', reObs);
     document.getElementById('obs-mode')?.addEventListener('change', reObs);
     document.getElementById('obs-month')?.addEventListener('change', reObs);
+    document.getElementById('obs-date-start')?.addEventListener('change', reObs);
+    document.getElementById('obs-date-end')?.addEventListener('change', reObs);
     const reWeekly = () => buildWeeklyChart(document.getElementById('weekly-sector').value, document.getElementById('weekly-month').value);
     document.getElementById('weekly-sector')?.addEventListener('change', reWeekly);
     document.getElementById('weekly-month')?.addEventListener('change', reWeekly);
